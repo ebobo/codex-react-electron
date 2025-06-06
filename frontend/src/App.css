@@ -40,3 +40,21 @@
 .read-the-docs {
   color: #888;
 }
+
+.dwg-controls {
+  margin-bottom: 1rem;
+}
+
+.dwg-layers {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.dwg-container {
+  border: 1px solid #888;
+  overflow: auto;
+  display: inline-block;
+}
