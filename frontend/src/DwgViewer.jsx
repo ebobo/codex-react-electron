@@ -8,6 +8,7 @@ export default function DwgViewer({ file }) {
   const [layers, setLayers] = useState([])
   const [visibleLayers, setVisibleLayers] = useState(new Set())
   const [zoom, setZoom] = useState(1)
+  const [rotation, setRotation] = useState(0)
   const selectAllRef = useRef(null)
 
   useEffect(() => {
@@ -59,6 +60,8 @@ export default function DwgViewer({ file }) {
 
   const zoomIn = () => setZoom((z) => z * 1.2)
   const zoomOut = () => setZoom((z) => z / 1.2)
+  const rotateLeft = () => setRotation((r) => r - 15)
+  const rotateRight = () => setRotation((r) => r + 15)
 
   const toggleAllLayers = (checked) => {
     if (checked) setVisibleLayers(new Set(layers))
@@ -73,6 +76,8 @@ export default function DwgViewer({ file }) {
         <div className="dwg-controls">
           <button onClick={zoomOut}>-</button>
           <button onClick={zoomIn}>+</button>
+          <button onClick={rotateLeft}>⟲</button>
+          <button onClick={rotateRight}>⟳</button>
         </div>
         <div className="dwg-layers">
           <label>
@@ -98,7 +103,10 @@ export default function DwgViewer({ file }) {
       </div>
       <div
         className="dwg-container"
-        style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}
+        style={{
+          transform: `scale(${zoom}) rotate(${rotation}deg)`,
+          transformOrigin: 'center',
+        }}
         dangerouslySetInnerHTML={{ __html: svg }}
       />
     </div>
