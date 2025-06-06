@@ -1,6 +1,8 @@
 # Drawing Viewer (React + Vite)
 
-This simple frontend app lets you test importing and displaying drawing files. PDF files are rendered with [`pdfjs-dist`](https://github.com/mozilla/pdf.js). DWG files currently show a placeholder message.
+This simple frontend app lets you test importing and displaying drawing files. PDF files are rendered with [`pdfjs-dist`](https://github.com/mozilla/pdf.js). DWG files are converted to SVG with [`@mlightcad/libredwg-web`](https://www.npmjs.com/package/@mlightcad/libredwg-web).
+
+The viewer loads the library's WebAssembly module directly from the package, so no large binaries are stored in the repository.
 
 ## Development
 
