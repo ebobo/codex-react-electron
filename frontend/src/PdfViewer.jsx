@@ -1,9 +1,9 @@
-import * as pdfjsLib from 'pdfjs-dist';
 import { useEffect, useRef } from 'react'
 import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist'
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 
-// Set the worker source for pdfjs
-GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+// Set the worker source for pdfjs to a bundled worker script
+GlobalWorkerOptions.workerSrc = pdfWorker
 
 export default function PdfViewer({ file }) {
   const canvasRef = useRef(null)
