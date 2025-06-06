@@ -4,6 +4,10 @@ import wasmUrl from '../node_modules/@mlightcad/libredwg-web/wasm/libredwg-web.w
 
 export default function DwgViewer({ file }) {
   const [svg, setSvg] = useState(null)
+  const [dbInfo, setDbInfo] = useState(null)
+  const [layers, setLayers] = useState([])
+  const [visibleLayers, setVisibleLayers] = useState(new Set())
+  const [zoom, setZoom] = useState(1)
 
   useEffect(() => {
     if (!file) return
@@ -16,13 +20,62 @@ export default function DwgViewer({ file }) {
       const dwgData = libredwg.dwg_read_data(reader.result, Dwg_File_Type.DWG)
       const db = libredwg.convert(dwgData)
       libredwg.dwg_free(dwgData)
-      const svgStr = libredwg.dwg_to_svg(db)
-      setSvg(svgStr)
+      setDbInfo({ libredwg, db })
+      const layerNames = db.tables.LAYER.entries.map((l) => l.name)
+      setLayers(layerNames)
+      setVisibleLayers(new Set(layerNames))
     }
     reader.readAsArrayBuffer(file)
   }, [file])
 
+  useEffect(() => {
+    if (!dbInfo) return
+    const { libredwg, db } = dbInfo
+    const filtered = structuredClone(db)
+    filtered.entities = db.entities.filter((e) => visibleLayers.has(e.layer))
+    filtered.tables.BLOCK_RECORD.entries = db.tables.BLOCK_RECORD.entries.map((b) => ({
+      ...b,
+      entities: b.entities.filter((e) => visibleLayers.has(e.layer)),
+    }))
+    const svgStr = libredwg.dwg_to_svg(filtered)
+    setSvg(svgStr)
+  }, [dbInfo, visibleLayers])
+
+  const toggleLayer = (name) => {
+    setVisibleLayers((prev) => {
+      const next = new Set(prev)
+      if (next.has(name)) next.delete(name)
+      else next.add(name)
+      return next
+    })
+  }
+
+  const zoomIn = () => setZoom((z) => z * 1.2)
+  const zoomOut = () => setZoom((z) => z / 1.2)
+
   return svg ? (
-    <div className="dwg-container" dangerouslySetInnerHTML={{ __html: svg }} />
+    <div>
+      <div className="dwg-controls">
+        <button onClick={zoomOut}>-</button>
+        <button onClick={zoomIn}>+</button>
+      </div>
+      <div className="dwg-layers">
+        {layers.map((l) => (
+          <label key={l}>
+            <input
+              type="checkbox"
+              checked={visibleLayers.has(l)}
+              onChange={() => toggleLayer(l)}
+            />
+            {l}
+          </label>
+        ))}
+      </div>
+      <div
+        className="dwg-container"
+        style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}
+        dangerouslySetInnerHTML={{ __html: svg }}
+      />
+    </div>
   ) : null
 }
