@@ -45,12 +45,27 @@
   margin-bottom: 1rem;
 }
 
+.dwg-viewer {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.dwg-sidebar {
+  width: 200px;
+  border: 1px solid #888;
+  padding: 0.5rem;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
 .dwg-layers {
   margin-bottom: 1rem;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  justify-content: center;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-start;
 }
 
 .dwg-container {
@@ -58,3 +73,4 @@
   overflow: auto;
   display: inline-block;
 }
+

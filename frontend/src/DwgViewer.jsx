@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { createModule, LibreDwg, Dwg_File_Type } from '@mlightcad/libredwg-web'
 import wasmUrl from '../node_modules/@mlightcad/libredwg-web/wasm/libredwg-web.wasm?url'
 
@@ -8,6 +8,7 @@ export default function DwgViewer({ file }) {
   const [layers, setLayers] = useState([])
   const [visibleLayers, setVisibleLayers] = useState(new Set())
   const [zoom, setZoom] = useState(1)
+  const selectAllRef = useRef(null)
 
   useEffect(() => {
     if (!file) return
@@ -41,6 +42,12 @@ export default function DwgViewer({ file }) {
     setSvg(svgStr)
   }, [dbInfo, visibleLayers])
 
+  useEffect(() => {
+    if (!selectAllRef.current) return
+    selectAllRef.current.indeterminate =
+      visibleLayers.size > 0 && visibleLayers.size < layers.length
+  }, [visibleLayers, layers])
+
   const toggleLayer = (name) => {
     setVisibleLayers((prev) => {
       const next = new Set(prev)
@@ -53,23 +60,41 @@ export default function DwgViewer({ file }) {
   const zoomIn = () => setZoom((z) => z * 1.2)
   const zoomOut = () => setZoom((z) => z / 1.2)
 
+  const toggleAllLayers = (checked) => {
+    if (checked) setVisibleLayers(new Set(layers))
+    else setVisibleLayers(new Set())
+  }
+
+  const allSelected = layers.length > 0 && visibleLayers.size === layers.length
+
   return svg ? (
-    <div>
-      <div className="dwg-controls">
-        <button onClick={zoomOut}>-</button>
-        <button onClick={zoomIn}>+</button>
-      </div>
-      <div className="dwg-layers">
-        {layers.map((l) => (
-          <label key={l}>
+    <div className="dwg-viewer">
+      <div className="dwg-sidebar">
+        <div className="dwg-controls">
+          <button onClick={zoomOut}>-</button>
+          <button onClick={zoomIn}>+</button>
+        </div>
+        <div className="dwg-layers">
+          <label>
             <input
               type="checkbox"
-              checked={visibleLayers.has(l)}
-              onChange={() => toggleLayer(l)}
+              ref={selectAllRef}
+              checked={allSelected}
+              onChange={(e) => toggleAllLayers(e.target.checked)}
             />
-            {l}
+            Select All
           </label>
-        ))}
+          {layers.map((l) => (
+            <label key={l}>
+              <input
+                type="checkbox"
+                checked={visibleLayers.has(l)}
+                onChange={() => toggleLayer(l)}
+              />
+              {l}
+            </label>
+          ))}
+        </div>
       </div>
       <div
         className="dwg-container"
