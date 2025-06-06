@@ -2,15 +2,27 @@ import { useEffect, useState, useRef } from 'react'
 import { createModule, LibreDwg, Dwg_File_Type } from '@mlightcad/libredwg-web'
 import wasmUrl from '../node_modules/@mlightcad/libredwg-web/wasm/libredwg-web.wasm?url'
 
+function filterDbByLayers(db, layerSet) {
+  const filtered = structuredClone(db)
+  filtered.entities = db.entities.filter((e) => layerSet.has(e.layer))
+  filtered.tables.BLOCK_RECORD.entries = db.tables.BLOCK_RECORD.entries.map((b) => ({
+    ...b,
+    entities: b.entities.filter((e) => layerSet.has(e.layer)),
+  }))
+  return filtered
+}
+
 export default function DwgViewer({ file }) {
   const [svg, setSvg] = useState(null)
   const [dbInfo, setDbInfo] = useState(null)
   const [layers, setLayers] = useState([])
   const [visibleLayers, setVisibleLayers] = useState(new Set())
+  const [layerPreviews, setLayerPreviews] = useState({})
   const [zoom, setZoom] = useState(1)
   const [rotation, setRotation] = useState(0)
   const selectAllRef = useRef(null)
   const svgContainerRef = useRef(null)
+  const panState = useRef(null)
 
   useEffect(() => {
     if (!file) return
@@ -34,15 +46,21 @@ export default function DwgViewer({ file }) {
   useEffect(() => {
     if (!dbInfo) return
     const { libredwg, db } = dbInfo
-    const filtered = structuredClone(db)
-    filtered.entities = db.entities.filter((e) => visibleLayers.has(e.layer))
-    filtered.tables.BLOCK_RECORD.entries = db.tables.BLOCK_RECORD.entries.map((b) => ({
-      ...b,
-      entities: b.entities.filter((e) => visibleLayers.has(e.layer)),
-    }))
+    const filtered = filterDbByLayers(db, visibleLayers)
     const svgStr = libredwg.dwg_to_svg(filtered)
     setSvg(svgStr)
   }, [dbInfo, visibleLayers])
+
+  useEffect(() => {
+    if (!dbInfo) return
+    const { libredwg, db } = dbInfo
+    const previews = {}
+    for (const name of layers) {
+      const filtered = filterDbByLayers(db, new Set([name]))
+      previews[name] = libredwg.dwg_to_svg(filtered)
+    }
+    setLayerPreviews(previews)
+  }, [dbInfo, layers])
 
   useEffect(() => {
     if (!selectAllRef.current) return
@@ -74,6 +92,42 @@ export default function DwgViewer({ file }) {
       el.style.transformOrigin = 'center'
     }
   }, [svg, zoom, rotation])
+
+  useEffect(() => {
+    const container = svgContainerRef.current
+    if (!container) return
+    const handleDown = (e) => {
+      panState.current = {
+        x: e.clientX,
+        y: e.clientY,
+        left: container.scrollLeft,
+        top: container.scrollTop,
+      }
+      container.style.cursor = 'grabbing'
+    }
+    const handleMove = (e) => {
+      if (!panState.current) return
+      const dx = e.clientX - panState.current.x
+      const dy = e.clientY - panState.current.y
+      container.scrollLeft = panState.current.left - dx
+      container.scrollTop = panState.current.top - dy
+    }
+    const handleUp = () => {
+      panState.current = null
+      container.style.cursor = 'grab'
+    }
+    container.addEventListener('mousedown', handleDown)
+    container.addEventListener('mousemove', handleMove)
+    container.addEventListener('mouseup', handleUp)
+    container.addEventListener('mouseleave', handleUp)
+    container.style.cursor = 'grab'
+    return () => {
+      container.removeEventListener('mousedown', handleDown)
+      container.removeEventListener('mousemove', handleMove)
+      container.removeEventListener('mouseup', handleUp)
+      container.removeEventListener('mouseleave', handleUp)
+    }
+  }, [])
 
   const toggleAllLayers = (checked) => {
     if (checked) setVisibleLayers(new Set(layers))
@@ -118,6 +172,10 @@ export default function DwgViewer({ file }) {
                 type="checkbox"
                 checked={visibleLayers.has(l)}
                 onChange={() => toggleLayer(l)}
+              />
+              <span
+                className="layer-preview"
+                dangerouslySetInnerHTML={{ __html: layerPreviews[l] }}
               />
               {l}
             </label>
