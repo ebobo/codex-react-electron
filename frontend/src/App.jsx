@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import PdfViewer from './PdfViewer.jsx'
+import DwgViewer from './DwgViewer.jsx'
 import './App.css'
 
 function App() {
@@ -19,9 +20,7 @@ function App() {
       <h1>Drawing Viewer</h1>
       <input type="file" accept=".pdf,.dwg" onChange={handleFile} />
       {file && fileType === 'pdf' && <PdfViewer file={file} />}
-      {file && fileType === 'dwg' && (
-        <p>DWG viewing is not currently supported.</p>
-      )}
+      {file && fileType === 'dwg' && <DwgViewer file={file} />}
       {file && !['pdf', 'dwg'].includes(fileType) && (
         <p>Unsupported file type.</p>
       )}
