@@ -86,10 +86,12 @@
 
 .dwg-container {
   border: 1px solid #888;
-  overflow: auto;
+  overflow: hidden;
   display: inline-block;
   height: 90vh;
   width: 70vw;
+  cursor: grab;
+  position: relative;
 }
 
 .pdf-viewer {

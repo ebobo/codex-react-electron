@@ -20,6 +20,7 @@ export default function DwgViewer({ file }) {
   const [layerPreviews, setLayerPreviews] = useState({})
   const [zoom, setZoom] = useState(1)
   const [rotation, setRotation] = useState(0)
+  const [pan, setPan] = useState({ x: 0, y: 0 })
   const selectAllRef = useRef(null)
   const svgContainerRef = useRef(null)
   const panState = useRef(null)
@@ -36,7 +37,14 @@ export default function DwgViewer({ file }) {
       const db = libredwg.convert(dwgData)
       libredwg.dwg_free(dwgData)
       setDbInfo({ libredwg, db })
-      const layerNames = db.tables.LAYER.entries.map((l) => l.name)
+      const usedLayers = new Set()
+      db.entities.forEach((e) => usedLayers.add(e.layer))
+      db.tables.BLOCK_RECORD.entries.forEach((b) =>
+        b.entities.forEach((e) => usedLayers.add(e.layer))
+      )
+      const layerNames = db.tables.LAYER.entries
+        .map((l) => l.name)
+        .filter((n) => usedLayers.has(n))
       setLayers(layerNames)
       setVisibleLayers(new Set(layerNames))
     }
@@ -54,10 +62,23 @@ export default function DwgViewer({ file }) {
   useEffect(() => {
     if (!dbInfo) return
     const { libredwg, db } = dbInfo
+    const normalizeSvg = (str) => {
+      const doc = new DOMParser().parseFromString(str, 'image/svg+xml')
+      const el = doc.documentElement
+      el.setAttribute('width', '48')
+      el.setAttribute('height', '48')
+      if (!el.getAttribute('viewBox')) {
+        const w = el.getAttribute('width')
+        const h = el.getAttribute('height')
+        el.setAttribute('viewBox', `0 0 ${w} ${h}`)
+      }
+      el.setAttribute('preserveAspectRatio', 'xMidYMid meet')
+      return el.outerHTML
+    }
     const previews = {}
     for (const name of layers) {
       const filtered = filterDbByLayers(db, new Set([name]))
-      previews[name] = libredwg.dwg_to_svg(filtered)
+      previews[name] = normalizeSvg(libredwg.dwg_to_svg(filtered))
     }
     setLayerPreviews(previews)
   }, [dbInfo, layers])
@@ -88,10 +109,10 @@ export default function DwgViewer({ file }) {
     if (!svgContainerRef.current) return
     const el = svgContainerRef.current.querySelector('svg')
     if (el) {
-      el.style.transform = `scale(${zoom}) rotate(${rotation}deg)`
+      el.style.transform = `translate(${pan.x}px, ${pan.y}px) scale(${zoom}) rotate(${rotation}deg)`
       el.style.transformOrigin = 'center'
     }
-  }, [svg, zoom, rotation])
+  }, [svg, zoom, rotation, pan])
 
   useEffect(() => {
     const container = svgContainerRef.current
@@ -100,8 +121,8 @@ export default function DwgViewer({ file }) {
       panState.current = {
         x: e.clientX,
         y: e.clientY,
-        left: container.scrollLeft,
-        top: container.scrollTop,
+        startX: pan.x,
+        startY: pan.y,
       }
       container.style.cursor = 'grabbing'
     }
@@ -109,8 +130,7 @@ export default function DwgViewer({ file }) {
       if (!panState.current) return
       const dx = e.clientX - panState.current.x
       const dy = e.clientY - panState.current.y
-      container.scrollLeft = panState.current.left - dx
-      container.scrollTop = panState.current.top - dy
+      setPan({ x: panState.current.startX + dx, y: panState.current.startY + dy })
     }
     const handleUp = () => {
       panState.current = null
