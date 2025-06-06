@@ -7,13 +7,43 @@ GlobalWorkerOptions.workerSrc = pdfWorker
 
 export default function PdfViewer({ file }) {
   const canvasRef = useRef(null)
+  const containerRef = useRef(null)
   const [page, setPage] = useState(null)
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const panState = useRef(null)
+  const hDownRef = useRef(false)
+  const pointerInsideRef = useRef(false)
 
   const zoomIn = () => setZoom((z) => z * 1.2)
   const zoomOut = () => setZoom((z) => z / 1.2)
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'h' || e.key === 'H') {
+        if (!hDownRef.current) {
+          hDownRef.current = true
+          if (pointerInsideRef.current && containerRef.current && !panState.current) {
+            containerRef.current.style.cursor = 'grab'
+          }
+        }
+      }
+    }
+    const handleKeyUp = (e) => {
+      if (e.key === 'h' || e.key === 'H') {
+        hDownRef.current = false
+        if (containerRef.current && !panState.current) {
+          containerRef.current.style.cursor = 'default'
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
+  }, [])
 
   useEffect(() => {
     if (!file) return
@@ -45,9 +75,22 @@ export default function PdfViewer({ file }) {
   }, [pan])
 
   useEffect(() => {
-    const container = canvasRef.current?.parentElement
+    const container = containerRef.current
     if (!container) return
+
+    const handleEnter = () => {
+      pointerInsideRef.current = true
+      if (hDownRef.current && !panState.current) {
+        container.style.cursor = 'grab'
+      }
+    }
+    const handleLeave = () => {
+      pointerInsideRef.current = false
+      panState.current = null
+      container.style.cursor = 'default'
+    }
     const handleDown = (e) => {
+      if (!hDownRef.current) return
       panState.current = {
         x: e.clientX,
         y: e.clientY,
@@ -63,25 +106,31 @@ export default function PdfViewer({ file }) {
       setPan({ x: panState.current.startX + dx, y: panState.current.startY + dy })
     }
     const handleUp = () => {
+      if (!panState.current) return
       panState.current = null
-      container.style.cursor = 'grab'
+      if (hDownRef.current && pointerInsideRef.current) {
+        container.style.cursor = 'grab'
+      } else {
+        container.style.cursor = 'default'
+      }
     }
+    container.addEventListener('pointerenter', handleEnter)
+    container.addEventListener('pointerleave', handleLeave)
     container.addEventListener('pointerdown', handleDown)
     container.addEventListener('pointermove', handleMove)
     container.addEventListener('pointerup', handleUp)
-    container.addEventListener('pointerleave', handleUp)
-    container.style.cursor = 'grab'
     return () => {
+      container.removeEventListener('pointerenter', handleEnter)
+      container.removeEventListener('pointerleave', handleLeave)
       container.removeEventListener('pointerdown', handleDown)
       container.removeEventListener('pointermove', handleMove)
       container.removeEventListener('pointerup', handleUp)
-      container.removeEventListener('pointerleave', handleUp)
     }
   }, [pan.x, pan.y])
 
   return page ? (
     <div className="pdf-viewer">
-      <div className="pdf-container">
+      <div className="pdf-container" ref={containerRef}>
         <canvas ref={canvasRef} />
       </div>
       <div className="pdf-sidebar">

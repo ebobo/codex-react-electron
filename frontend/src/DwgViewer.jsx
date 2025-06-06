@@ -17,7 +17,6 @@ export default function DwgViewer({ file }) {
   const [dbInfo, setDbInfo] = useState(null)
   const [layers, setLayers] = useState([])
   const [visibleLayers, setVisibleLayers] = useState(new Set())
-  const [layerPreviews, setLayerPreviews] = useState({})
   const [zoom, setZoom] = useState(1)
   const [rotation, setRotation] = useState(0)
   const [pan, setPan] = useState({ x: 0, y: 0 })
@@ -65,29 +64,6 @@ export default function DwgViewer({ file }) {
     setSvg(svgStr)
   }, [dbInfo, visibleLayers])
 
-  useEffect(() => {
-    if (!dbInfo) return
-    const { libredwg, db } = dbInfo
-    const normalizeSvg = (str) => {
-      const doc = new DOMParser().parseFromString(str, 'image/svg+xml')
-      const el = doc.documentElement
-      const origW = el.getAttribute('width') || '100'
-      const origH = el.getAttribute('height') || '100'
-      if (!el.getAttribute('viewBox')) {
-        el.setAttribute('viewBox', `0 0 ${origW} ${origH}`)
-      }
-      el.setAttribute('width', '48')
-      el.setAttribute('height', '48')
-      el.setAttribute('preserveAspectRatio', 'xMidYMid meet')
-      return el.outerHTML
-    }
-    const previews = {}
-    for (const name of layers) {
-      const filtered = filterDbByLayers(db, new Set([name]))
-      previews[name] = normalizeSvg(libredwg.dwg_to_svg(filtered))
-    }
-    setLayerPreviews(previews)
-  }, [dbInfo, layers])
 
   useEffect(() => {
     if (!selectAllRef.current) return
@@ -202,10 +178,6 @@ export default function DwgViewer({ file }) {
                 type="checkbox"
                 checked={visibleLayers.has(l)}
                 onChange={() => toggleLayer(l)}
-              />
-              <span
-                className="layer-preview"
-                dangerouslySetInnerHTML={{ __html: layerPreviews[l] }}
               />
               {l}
             </label>
