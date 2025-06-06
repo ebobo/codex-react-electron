@@ -21,32 +21,38 @@ export default function DwgViewer({ file }) {
   const [zoom, setZoom] = useState(1)
   const [rotation, setRotation] = useState(0)
   const [pan, setPan] = useState({ x: 0, y: 0 })
+  const [loading, setLoading] = useState(false)
   const selectAllRef = useRef(null)
   const svgContainerRef = useRef(null)
   const panState = useRef(null)
 
   useEffect(() => {
     if (!file) return
+    setLoading(true)
     const reader = new FileReader()
     reader.onload = async () => {
-      const wasmInstance = await createModule({
-        locateFile: (path) => (path.endsWith('.wasm') ? wasmUrl : path),
-      })
-      const libredwg = LibreDwg.createByWasmInstance(wasmInstance)
-      const dwgData = libredwg.dwg_read_data(reader.result, Dwg_File_Type.DWG)
-      const db = libredwg.convert(dwgData)
-      libredwg.dwg_free(dwgData)
-      setDbInfo({ libredwg, db })
-      const usedLayers = new Set()
-      db.entities.forEach((e) => usedLayers.add(e.layer))
-      db.tables.BLOCK_RECORD.entries.forEach((b) =>
-        b.entities.forEach((e) => usedLayers.add(e.layer))
-      )
-      const layerNames = db.tables.LAYER.entries
-        .map((l) => l.name)
-        .filter((n) => usedLayers.has(n))
-      setLayers(layerNames)
-      setVisibleLayers(new Set(layerNames))
+      try {
+        const wasmInstance = await createModule({
+          locateFile: (path) => (path.endsWith('.wasm') ? wasmUrl : path),
+        })
+        const libredwg = LibreDwg.createByWasmInstance(wasmInstance)
+        const dwgData = libredwg.dwg_read_data(reader.result, Dwg_File_Type.DWG)
+        const db = libredwg.convert(dwgData)
+        libredwg.dwg_free(dwgData)
+        setDbInfo({ libredwg, db })
+        const usedLayers = new Set()
+        db.entities.forEach((e) => usedLayers.add(e.layer))
+        db.tables.BLOCK_RECORD.entries.forEach((b) =>
+          b.entities.forEach((e) => usedLayers.add(e.layer))
+        )
+        const layerNames = db.tables.LAYER.entries
+          .map((l) => l.name)
+          .filter((n) => usedLayers.has(n))
+        setLayers(layerNames)
+        setVisibleLayers(new Set(layerNames))
+      } finally {
+        setLoading(false)
+      }
     }
     reader.readAsArrayBuffer(file)
   }, [file])
@@ -65,13 +71,13 @@ export default function DwgViewer({ file }) {
     const normalizeSvg = (str) => {
       const doc = new DOMParser().parseFromString(str, 'image/svg+xml')
       const el = doc.documentElement
+      const origW = el.getAttribute('width') || '100'
+      const origH = el.getAttribute('height') || '100'
+      if (!el.getAttribute('viewBox')) {
+        el.setAttribute('viewBox', `0 0 ${origW} ${origH}`)
+      }
       el.setAttribute('width', '48')
       el.setAttribute('height', '48')
-      if (!el.getAttribute('viewBox')) {
-        const w = el.getAttribute('width')
-        const h = el.getAttribute('height')
-        el.setAttribute('viewBox', `0 0 ${w} ${h}`)
-      }
       el.setAttribute('preserveAspectRatio', 'xMidYMid meet')
       return el.outerHTML
     }
@@ -136,18 +142,18 @@ export default function DwgViewer({ file }) {
       panState.current = null
       container.style.cursor = 'grab'
     }
-    container.addEventListener('mousedown', handleDown)
-    container.addEventListener('mousemove', handleMove)
-    container.addEventListener('mouseup', handleUp)
-    container.addEventListener('mouseleave', handleUp)
+    container.addEventListener('pointerdown', handleDown)
+    container.addEventListener('pointermove', handleMove)
+    container.addEventListener('pointerup', handleUp)
+    container.addEventListener('pointerleave', handleUp)
     container.style.cursor = 'grab'
     return () => {
-      container.removeEventListener('mousedown', handleDown)
-      container.removeEventListener('mousemove', handleMove)
-      container.removeEventListener('mouseup', handleUp)
-      container.removeEventListener('mouseleave', handleUp)
+      container.removeEventListener('pointerdown', handleDown)
+      container.removeEventListener('pointermove', handleMove)
+      container.removeEventListener('pointerup', handleUp)
+      container.removeEventListener('pointerleave', handleUp)
     }
-  }, [])
+  }, [pan.x, pan.y])
 
   const toggleAllLayers = (checked) => {
     if (checked) setVisibleLayers(new Set(layers))
@@ -155,6 +161,10 @@ export default function DwgViewer({ file }) {
   }
 
   const allSelected = layers.length > 0 && visibleLayers.size === layers.length
+
+  if (loading) {
+    return <div className="dwg-loading">Loading drawing…</div>
+  }
 
   return svg ? (
     <div className="dwg-viewer">
