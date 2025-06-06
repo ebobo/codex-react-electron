@@ -10,6 +10,7 @@ export default function DwgViewer({ file }) {
   const [zoom, setZoom] = useState(1)
   const [rotation, setRotation] = useState(0)
   const selectAllRef = useRef(null)
+  const svgContainerRef = useRef(null)
 
   useEffect(() => {
     if (!file) return
@@ -63,6 +64,15 @@ export default function DwgViewer({ file }) {
   const rotateLeft = () => setRotation((r) => r - 15)
   const rotateRight = () => setRotation((r) => r + 15)
 
+  useEffect(() => {
+    if (!svgContainerRef.current) return
+    const el = svgContainerRef.current.querySelector('svg')
+    if (el) {
+      el.style.transform = `scale(${zoom}) rotate(${rotation}deg)`
+      el.style.transformOrigin = 'center'
+    }
+  }, [svg, zoom, rotation])
+
   const toggleAllLayers = (checked) => {
     if (checked) setVisibleLayers(new Set(layers))
     else setVisibleLayers(new Set())
@@ -72,6 +82,11 @@ export default function DwgViewer({ file }) {
 
   return svg ? (
     <div className="dwg-viewer">
+      <div
+        className="dwg-container"
+        ref={svgContainerRef}
+        dangerouslySetInnerHTML={{ __html: svg }}
+      />
       <div className="dwg-sidebar">
         <div className="dwg-controls">
           <button onClick={zoomOut}>-</button>
@@ -101,14 +116,6 @@ export default function DwgViewer({ file }) {
           ))}
         </div>
       </div>
-      <div
-        className="dwg-container"
-        style={{
-          transform: `scale(${zoom}) rotate(${rotation}deg)`,
-          transformOrigin: 'center',
-        }}
-        dangerouslySetInnerHTML={{ __html: svg }}
-      />
     </div>
   ) : null
 }
