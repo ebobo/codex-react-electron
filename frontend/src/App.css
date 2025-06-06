@@ -85,3 +85,39 @@
   width: 70vw;
 }
 
+.pdf-viewer {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.pdf-container {
+  border: 1px solid #888;
+  overflow: auto;
+  display: inline-block;
+  height: 90vh;
+  width: 70vw;
+}
+
+.pdf-sidebar {
+  width: 250px;
+  border: 1px solid #888;
+  padding: 0.5rem;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.pdf-controls {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.pdf-controls > div {
+  display: flex;
+  gap: 0.5rem;
+}
+
