@@ -43,6 +43,15 @@
 
 .dwg-controls {
   margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.dwg-controls > div {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .dwg-viewer {

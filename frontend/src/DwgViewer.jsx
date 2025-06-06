@@ -61,8 +61,8 @@ export default function DwgViewer({ file }) {
 
   const zoomIn = () => setZoom((z) => z * 1.2)
   const zoomOut = () => setZoom((z) => z / 1.2)
-  const rotateLeft = () => setRotation((r) => r - 15)
-  const rotateRight = () => setRotation((r) => r + 15)
+  const rotateLeft = () => setRotation((r) => r - 5)
+  const rotateRight = () => setRotation((r) => r + 5)
 
   useEffect(() => {
     if (!svgContainerRef.current) return
@@ -89,10 +89,14 @@ export default function DwgViewer({ file }) {
       />
       <div className="dwg-sidebar">
         <div className="dwg-controls">
-          <button onClick={zoomOut}>-</button>
-          <button onClick={zoomIn}>+</button>
-          <button onClick={rotateLeft}>⟲</button>
-          <button onClick={rotateRight}>⟳</button>
+          <div className="zoom-controls">
+            <button onClick={zoomOut}>-</button>
+            <button onClick={zoomIn}>+</button>
+          </div>
+          <div className="rotate-controls">
+            <button onClick={rotateLeft}>⟲</button>
+            <button onClick={rotateRight}>⟳</button>
+          </div>
         </div>
         <div className="dwg-layers">
           <label>
