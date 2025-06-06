@@ -12,3 +12,10 @@ npm run dev
 ```
 
 Open your browser at the printed local address to use the app.
+
+## Features
+
+- Zoom and pan DWG drawings.
+- Toggle individual layers on or off.
+- Rotate the drawing in 15° increments with the new rotate buttons.
+- Viewer area expands to nearly the full height of the browser window by default.
