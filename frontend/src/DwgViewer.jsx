@@ -208,29 +208,41 @@ export default function DwgViewer({ file }) {
   }
 
   return svg ? (
-    <div className="dwg-viewer">
-      <div className="dwg-container" ref={svgContainerRef} />
-      <div className="dwg-sidebar">
-        <div className="dwg-controls">
-          <div className="zoom-controls">
-            <div className="zoom-buttons">
-              <button onClick={zoomOut}>-</button>
-              <button onClick={resetZoom}>reset</button>
-              <button onClick={zoomIn}>+</button>
+      <div className="dwg-viewer">
+        <div className="dwg-container" ref={svgContainerRef} />
+        <div className="dwg-sidebar">
+          <div className="dwg-mini-wrapper" ref={miniRef}>
+            <div className="dwg-mini" />
+            <div
+              className="dwg-mini-overlay"
+              style={{
+                left: overlay.left,
+                top: overlay.top,
+                width: overlay.width,
+                height: overlay.height,
+              }}
+            />
+            <div className="dwg-controls">
+              <div className="zoom-controls">
+                <div className="zoom-buttons">
+                  <button onClick={zoomOut}>-</button>
+                  <button onClick={resetZoom}>reset</button>
+                  <button onClick={zoomIn}>+</button>
+                </div>
+                <span className="zoom-indicator">{Math.round(zoom * 100)}%</span>
+              </div>
+              <div className="rotate-controls">
+                <button onClick={rotateLeft}>⟲</button>
+                <button onClick={resetRotation}>reset</button>
+                <button onClick={rotateRight}>⟳</button>
+              </div>
             </div>
-            <span className="zoom-indicator">{Math.round(zoom * 100)}%</span>
           </div>
-          <div className="rotate-controls">
-            <button onClick={rotateLeft}>⟲</button>
-            <button onClick={resetRotation}>reset</button>
-            <button onClick={rotateRight}>⟳</button>
-          </div>
-        </div>
-        <div className="dwg-layers">
-          <div
-            className="layers-header"
-            onClick={() => setLayersOpen((o) => !o)}
-          >
+          <div className="dwg-layers">
+            <div
+              className="layers-header"
+              onClick={() => setLayersOpen((o) => !o)}
+            >
             Layers {layersOpen ? '▾' : '▸'}
           </div>
           {layersOpen && (
@@ -256,20 +268,8 @@ export default function DwgViewer({ file }) {
               ))}
             </div>
           )}
+          </div>
         </div>
       </div>
-      <div className="dwg-mini-window" ref={miniRef}>
-        <div className="dwg-mini" />
-        <div
-          className="dwg-mini-overlay"
-          style={{
-            left: overlay.left,
-            top: overlay.top,
-            width: overlay.width,
-            height: overlay.height,
-          }}
-        />
-      </div>
-    </div>
-  ) : null
-}
+    ) : null
+  }
