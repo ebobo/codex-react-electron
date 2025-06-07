@@ -129,7 +129,7 @@ export default function DwgViewer({ file }) {
       container.removeEventListener('pointerup', handleUp)
       container.removeEventListener('pointerleave', handleUp)
     }
-  }, [pan.x, pan.y])
+  }, [svg])
 
   const toggleAllLayers = (checked) => {
     if (checked) setVisibleLayers(new Set(layers))
