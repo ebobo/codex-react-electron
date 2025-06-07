@@ -75,7 +75,7 @@ export default function PdfViewer({ file }) {
       container.removeEventListener('mouseleave', endDrag)
       window.removeEventListener('mouseup', endDrag)
     }
-  }, [])
+  }, [page])
 
   useEffect(() => {
     const container = containerRef.current
