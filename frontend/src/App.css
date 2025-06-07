@@ -102,7 +102,7 @@
 
 .pdf-container {
   border: 1px solid #888;
-  overflow: hidden;
+  overflow: auto;
   display: inline-block;
   height: 90vh;
   width: 70vw;

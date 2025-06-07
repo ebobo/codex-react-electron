@@ -10,40 +10,10 @@ export default function PdfViewer({ file }) {
   const containerRef = useRef(null)
   const [page, setPage] = useState(null)
   const [zoom, setZoom] = useState(1)
-  const [pan, setPan] = useState({ x: 0, y: 0 })
-  const panState = useRef(null)
-  const hDownRef = useRef(false)
-  const pointerInsideRef = useRef(false)
+  const dragState = useRef(null)
 
   const zoomIn = () => setZoom((z) => z * 1.2)
   const zoomOut = () => setZoom((z) => z / 1.2)
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'h' || e.key === 'H') {
-        if (!hDownRef.current) {
-          hDownRef.current = true
-          if (pointerInsideRef.current && containerRef.current && !panState.current) {
-            containerRef.current.style.cursor = 'grab'
-          }
-        }
-      }
-    }
-    const handleKeyUp = (e) => {
-      if (e.key === 'h' || e.key === 'H') {
-        hDownRef.current = false
-        if (containerRef.current && !panState.current) {
-          containerRef.current.style.cursor = 'default'
-        }
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    window.addEventListener('keyup', handleKeyUp)
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-      window.removeEventListener('keyup', handleKeyUp)
-    }
-  }, [])
 
   useEffect(() => {
     if (!file) return
@@ -69,64 +39,55 @@ export default function PdfViewer({ file }) {
   }, [page, zoom])
 
   useEffect(() => {
-    if (!canvasRef.current) return
-    const canvas = canvasRef.current
-    canvas.style.transform = `translate(${pan.x}px, ${pan.y}px)`
-  }, [pan])
+    const container = containerRef.current
+    if (!container) return
+
+    const handleMouseDown = (e) => {
+      dragState.current = {
+        x: e.clientX,
+        y: e.clientY,
+        scrollLeft: container.scrollLeft,
+        scrollTop: container.scrollTop,
+      }
+      container.style.cursor = 'grabbing'
+      e.preventDefault()
+    }
+    const handleMouseMove = (e) => {
+      if (!dragState.current) return
+      const dx = e.clientX - dragState.current.x
+      const dy = e.clientY - dragState.current.y
+      container.scrollLeft = dragState.current.scrollLeft - dx
+      container.scrollTop = dragState.current.scrollTop - dy
+    }
+    const endDrag = () => {
+      if (!dragState.current) return
+      dragState.current = null
+      container.style.cursor = 'grab'
+    }
+
+    container.addEventListener('mousedown', handleMouseDown)
+    container.addEventListener('mousemove', handleMouseMove)
+    container.addEventListener('mouseleave', endDrag)
+    window.addEventListener('mouseup', endDrag)
+    return () => {
+      container.removeEventListener('mousedown', handleMouseDown)
+      container.removeEventListener('mousemove', handleMouseMove)
+      container.removeEventListener('mouseleave', endDrag)
+      window.removeEventListener('mouseup', endDrag)
+    }
+  }, [])
 
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
+    const canPan =
+      container.scrollWidth > container.clientWidth ||
+      container.scrollHeight > container.clientHeight
+    container.style.cursor = canPan ? 'grab' : 'default'
+  }, [zoom, page])
 
-    const handleEnter = () => {
-      pointerInsideRef.current = true
-      if (hDownRef.current && !panState.current) {
-        container.style.cursor = 'grab'
-      }
-    }
-    const handleLeave = () => {
-      pointerInsideRef.current = false
-      panState.current = null
-      container.style.cursor = 'default'
-    }
-    const handleDown = (e) => {
-      if (!hDownRef.current) return
-      panState.current = {
-        x: e.clientX,
-        y: e.clientY,
-        startX: pan.x,
-        startY: pan.y,
-      }
-      container.style.cursor = 'grabbing'
-    }
-    const handleMove = (e) => {
-      if (!panState.current) return
-      const dx = e.clientX - panState.current.x
-      const dy = e.clientY - panState.current.y
-      setPan({ x: panState.current.startX + dx, y: panState.current.startY + dy })
-    }
-    const handleUp = () => {
-      if (!panState.current) return
-      panState.current = null
-      if (hDownRef.current && pointerInsideRef.current) {
-        container.style.cursor = 'grab'
-      } else {
-        container.style.cursor = 'default'
-      }
-    }
-    container.addEventListener('pointerenter', handleEnter)
-    container.addEventListener('pointerleave', handleLeave)
-    container.addEventListener('pointerdown', handleDown)
-    container.addEventListener('pointermove', handleMove)
-    container.addEventListener('pointerup', handleUp)
-    return () => {
-      container.removeEventListener('pointerenter', handleEnter)
-      container.removeEventListener('pointerleave', handleLeave)
-      container.removeEventListener('pointerdown', handleDown)
-      container.removeEventListener('pointermove', handleMove)
-      container.removeEventListener('pointerup', handleUp)
-    }
-  }, [pan.x, pan.y])
+
+
 
   return page ? (
     <div className="pdf-viewer">
