@@ -16,6 +16,7 @@ export default function PdfViewer({ file }) {
 
   const zoomIn = () => setZoom((z) => z * 1.2)
   const zoomOut = () => setZoom((z) => z / 1.2)
+  const resetZoom = () => setZoom(1)
 
   useEffect(() => {
     if (!file) return
@@ -150,7 +151,9 @@ export default function PdfViewer({ file }) {
         <div className="pdf-controls">
           <div className="zoom-controls">
             <button onClick={zoomOut}>-</button>
+            <button onClick={resetZoom}>reset</button>
             <button onClick={zoomIn}>+</button>
+            <span className="zoom-indicator">{Math.round(zoom * 100)}%</span>
           </div>
         </div>
       </div>
