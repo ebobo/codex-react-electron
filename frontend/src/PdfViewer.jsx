@@ -150,9 +150,11 @@ export default function PdfViewer({ file }) {
         </div>
         <div className="pdf-controls">
           <div className="zoom-controls">
-            <button onClick={zoomOut}>-</button>
-            <button onClick={resetZoom}>reset</button>
-            <button onClick={zoomIn}>+</button>
+            <div className="zoom-buttons">
+              <button onClick={zoomOut}>-</button>
+              <button onClick={resetZoom}>reset</button>
+              <button onClick={zoomIn}>+</button>
+            </div>
             <span className="zoom-indicator">{Math.round(zoom * 100)}%</span>
           </div>
         </div>

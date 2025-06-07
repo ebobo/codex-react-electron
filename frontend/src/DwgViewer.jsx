@@ -21,6 +21,7 @@ export default function DwgViewer({ file }) {
   const [rotation, setRotation] = useState(0)
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [overlay, setOverlay] = useState({ left: 0, top: 0, width: 0, height: 0 })
+  const [layersOpen, setLayersOpen] = useState(true)
   const [loading, setLoading] = useState(false)
   const selectAllRef = useRef(null)
   const svgContainerRef = useRef(null)
@@ -146,7 +147,7 @@ export default function DwgViewer({ file }) {
       })
     }
     update()
-  }, [svg, zoom, pan])
+  }, [svg, zoom, pan, rotation])
 
   useEffect(() => {
     const container = svgContainerRef.current
@@ -210,23 +211,13 @@ export default function DwgViewer({ file }) {
     <div className="dwg-viewer">
       <div className="dwg-container" ref={svgContainerRef} />
       <div className="dwg-sidebar">
-        <div className="dwg-mini-wrapper" ref={miniRef}>
-          <div className="dwg-mini" />
-          <div
-            className="dwg-mini-overlay"
-            style={{
-              left: overlay.left,
-              top: overlay.top,
-              width: overlay.width,
-              height: overlay.height,
-            }}
-          />
-        </div>
         <div className="dwg-controls">
           <div className="zoom-controls">
-            <button onClick={zoomOut}>-</button>
-            <button onClick={resetZoom}>reset</button>
-            <button onClick={zoomIn}>+</button>
+            <div className="zoom-buttons">
+              <button onClick={zoomOut}>-</button>
+              <button onClick={resetZoom}>reset</button>
+              <button onClick={zoomIn}>+</button>
+            </div>
             <span className="zoom-indicator">{Math.round(zoom * 100)}%</span>
           </div>
           <div className="rotate-controls">
@@ -236,26 +227,48 @@ export default function DwgViewer({ file }) {
           </div>
         </div>
         <div className="dwg-layers">
-          <label>
-            <input
-              type="checkbox"
-              ref={selectAllRef}
-              checked={allSelected}
-              onChange={(e) => toggleAllLayers(e.target.checked)}
-            />
-            Select All
-          </label>
-          {layers.map((l) => (
-            <label key={l}>
-              <input
-                type="checkbox"
-                checked={visibleLayers.has(l)}
-                onChange={() => toggleLayer(l)}
-              />
-              {l}
-            </label>
-          ))}
+          <div
+            className="layers-header"
+            onClick={() => setLayersOpen((o) => !o)}
+          >
+            Layers {layersOpen ? '▾' : '▸'}
+          </div>
+          {layersOpen && (
+            <div className="layers-list">
+              <label>
+                <input
+                  type="checkbox"
+                  ref={selectAllRef}
+                  checked={allSelected}
+                  onChange={(e) => toggleAllLayers(e.target.checked)}
+                />
+                Select All
+              </label>
+              {layers.map((l) => (
+                <label key={l}>
+                  <input
+                    type="checkbox"
+                    checked={visibleLayers.has(l)}
+                    onChange={() => toggleLayer(l)}
+                  />
+                  {l}
+                </label>
+              ))}
+            </div>
+          )}
         </div>
+      </div>
+      <div className="dwg-mini-window" ref={miniRef}>
+        <div className="dwg-mini" />
+        <div
+          className="dwg-mini-overlay"
+          style={{
+            left: overlay.left,
+            top: overlay.top,
+            width: overlay.width,
+            height: overlay.height,
+          }}
+        />
       </div>
     </div>
   ) : null

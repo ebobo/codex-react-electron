@@ -49,15 +49,28 @@
   align-items: flex-start;
 }
 
+
 .dwg-controls > div {
   display: flex;
   gap: 0.5rem;
 }
 
+.zoom-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.zoom-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .zoom-indicator {
-  display: inline-block;
+  display: block;
   min-width: 3ch;
-  text-align: right;
+  text-align: center;
 }
 
 .dwg-viewer {
@@ -76,12 +89,15 @@
   text-align: left;
 }
 
-.dwg-mini-wrapper {
-  position: relative;
-  width: 100%;
-  margin-bottom: 0.5rem;
+.dwg-mini-window {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  width: 220px;
   border: 1px solid #888;
   padding: 0.25rem;
+  background: #fff;
+  z-index: 10;
 }
 
 .dwg-mini svg {
@@ -95,6 +111,7 @@
   border: 2px solid red;
   pointer-events: none;
   box-sizing: border-box;
+  z-index: 1;
 }
 
 .dwg-layers {
@@ -109,6 +126,18 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
+}
+
+.layers-header {
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.layers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
 }
 
 .dwg-container {
@@ -175,10 +204,7 @@
   align-items: flex-start;
 }
 
-.pdf-controls > div {
-  display: flex;
-  gap: 0.5rem;
-}
+
 
 
 .dwg-loading {
