@@ -19,4 +19,5 @@ Open your browser at the printed local address to use the app.
 - Toggle individual layers on or off.
 - Rotate the drawing in 5° increments with the rotate buttons.
 - View PDF files with a built-in canvas renderer.
+- Zoom percentage indicators and reset buttons for both viewers.
 - Viewer area expands to nearly the full height of the browser window by default.
