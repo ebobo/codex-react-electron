@@ -91,6 +91,11 @@ export default function DwgViewer({ file }) {
 
   useEffect(() => {
     if (!svgContainerRef.current) return
+    svgContainerRef.current.innerHTML = svg
+  }, [svg])
+
+  useEffect(() => {
+    if (!svgContainerRef.current) return
     const el = svgContainerRef.current.querySelector('svg')
     if (el) {
       el.style.transform = `translate(${pan.x}px, ${pan.y}px) scale(${zoom}) rotate(${rotation}deg)`
@@ -141,7 +146,7 @@ export default function DwgViewer({ file }) {
       })
     }
     update()
-  }, [zoom, pan])
+  }, [svg, zoom, pan])
 
   useEffect(() => {
     const container = svgContainerRef.current
@@ -203,11 +208,7 @@ export default function DwgViewer({ file }) {
 
   return svg ? (
     <div className="dwg-viewer">
-      <div
-        className="dwg-container"
-        ref={svgContainerRef}
-        dangerouslySetInnerHTML={{ __html: svg }}
-      />
+      <div className="dwg-container" ref={svgContainerRef} />
       <div className="dwg-sidebar">
         <div className="dwg-mini-wrapper" ref={miniRef}>
           <div className="dwg-mini" />
@@ -226,6 +227,7 @@ export default function DwgViewer({ file }) {
             <button onClick={zoomOut}>-</button>
             <button onClick={resetZoom}>reset</button>
             <button onClick={zoomIn}>+</button>
+            <span className="zoom-indicator">{Math.round(zoom * 100)}%</span>
           </div>
           <div className="rotate-controls">
             <button onClick={rotateLeft}>⟲</button>
