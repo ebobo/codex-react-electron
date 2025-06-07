@@ -70,6 +70,25 @@
   text-align: left;
 }
 
+.dwg-mini-wrapper {
+  position: relative;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.dwg-mini svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.dwg-mini-overlay {
+  position: absolute;
+  border: 2px solid red;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
 .dwg-layers {
   margin-bottom: 1rem;
   display: flex;
@@ -120,6 +139,24 @@
   padding: 0.5rem;
   max-height: 80vh;
   overflow-y: auto;
+}
+
+.pdf-mini-wrapper {
+  position: relative;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.pdf-mini {
+  width: 100%;
+  display: block;
+}
+
+.pdf-mini-overlay {
+  position: absolute;
+  border: 2px solid red;
+  pointer-events: none;
+  box-sizing: border-box;
 }
 
 .pdf-controls {

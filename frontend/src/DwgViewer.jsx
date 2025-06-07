@@ -20,9 +20,11 @@ export default function DwgViewer({ file }) {
   const [zoom, setZoom] = useState(1)
   const [rotation, setRotation] = useState(0)
   const [pan, setPan] = useState({ x: 0, y: 0 })
+  const [overlay, setOverlay] = useState({ left: 0, top: 0, width: 0, height: 0 })
   const [loading, setLoading] = useState(false)
   const selectAllRef = useRef(null)
   const svgContainerRef = useRef(null)
+  const miniRef = useRef(null)
   const panState = useRef(null)
 
   useEffect(() => {
@@ -98,8 +100,65 @@ export default function DwgViewer({ file }) {
 
   useEffect(() => {
     const container = svgContainerRef.current
+    const miniWrapper = miniRef.current
+    if (!container || !miniWrapper) return
+    const mini = miniWrapper.querySelector('.dwg-mini')
+    if (!mini) return
+    const svgEl = container.querySelector('svg')
+    if (!svgEl) return
+    const vb = svgEl.viewBox.baseVal
+    const width = vb && vb.width ? vb.width : svgEl.getBBox().width
+    const height = vb && vb.height ? vb.height : svgEl.getBBox().height
+    const scale = mini.clientWidth / width
+    mini.innerHTML = ''
+    const clone = svgEl.cloneNode(true)
+    clone.removeAttribute('style')
+    clone.setAttribute('width', width * scale)
+    clone.setAttribute('height', height * scale)
+    mini.appendChild(clone)
+  }, [svg])
+
+  useEffect(() => {
+    const container = svgContainerRef.current
+    const miniWrapper = miniRef.current
+    if (!container || !miniWrapper) return
+    const mini = miniWrapper.querySelector('.dwg-mini')
+    if (!mini) return
+    const svgEl = container.querySelector('svg')
+    if (!svgEl) return
+    const vb = svgEl.viewBox.baseVal
+    const width = vb && vb.width ? vb.width : svgEl.getBBox().width
+    const height = vb && vb.height ? vb.height : svgEl.getBBox().height
+    const scale = mini.firstChild
+      ? mini.firstChild.getAttribute('width') / width
+      : mini.clientWidth / width
+    const update = () => {
+      setOverlay({
+        left: ((-container.clientWidth / 2 - pan.x) / zoom + width / 2) * scale,
+        top: ((-container.clientHeight / 2 - pan.y) / zoom + height / 2) * scale,
+        width: (container.clientWidth / zoom) * scale,
+        height: (container.clientHeight / zoom) * scale,
+      })
+    }
+    update()
+  }, [zoom, pan])
+
+  useEffect(() => {
+    const container = svgContainerRef.current
     if (!container) return
+    const svgEl = container.querySelector('svg')
+    const getCanPan = () => {
+      if (!svgEl) return false
+      const vb = svgEl.viewBox.baseVal
+      const width = vb && vb.width ? vb.width : svgEl.getBBox().width
+      const height = vb && vb.height ? vb.height : svgEl.getBBox().height
+      return (
+        width * zoom > container.clientWidth ||
+        height * zoom > container.clientHeight
+      )
+    }
     const handleDown = (e) => {
+      if (!getCanPan()) return
       panState.current = {
         x: e.clientX,
         y: e.clientY,
@@ -122,14 +181,14 @@ export default function DwgViewer({ file }) {
     container.addEventListener('pointermove', handleMove)
     container.addEventListener('pointerup', handleUp)
     container.addEventListener('pointerleave', handleUp)
-    container.style.cursor = 'grab'
+    container.style.cursor = getCanPan() ? 'grab' : 'default'
     return () => {
       container.removeEventListener('pointerdown', handleDown)
       container.removeEventListener('pointermove', handleMove)
       container.removeEventListener('pointerup', handleUp)
       container.removeEventListener('pointerleave', handleUp)
     }
-  }, [svg])
+  }, [svg, zoom, pan])
 
   const toggleAllLayers = (checked) => {
     if (checked) setVisibleLayers(new Set(layers))
@@ -150,6 +209,18 @@ export default function DwgViewer({ file }) {
         dangerouslySetInnerHTML={{ __html: svg }}
       />
       <div className="dwg-sidebar">
+        <div className="dwg-mini-wrapper" ref={miniRef}>
+          <div className="dwg-mini" />
+          <div
+            className="dwg-mini-overlay"
+            style={{
+              left: overlay.left,
+              top: overlay.top,
+              width: overlay.width,
+              height: overlay.height,
+            }}
+          />
+        </div>
         <div className="dwg-controls">
           <div className="zoom-controls">
             <button onClick={zoomOut}>-</button>
