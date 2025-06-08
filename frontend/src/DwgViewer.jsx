@@ -1,20 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
-import { createModule, LibreDwg, Dwg_File_Type } from '@mlightcad/libredwg-web'
-import wasmUrl from '../node_modules/@mlightcad/libredwg-web/wasm/libredwg-web.wasm?url'
-
-function filterDbByLayers(db, layerSet) {
-  const filtered = structuredClone(db)
-  filtered.entities = db.entities.filter((e) => layerSet.has(e.layer))
-  filtered.tables.BLOCK_RECORD.entries = db.tables.BLOCK_RECORD.entries.map((b) => ({
-    ...b,
-    entities: b.entities.filter((e) => layerSet.has(e.layer)),
-  }))
-  return filtered
-}
 
 export default function DwgViewer({ file }) {
   const [svg, setSvg] = useState(null)
-  const [dbInfo, setDbInfo] = useState(null)
   const [layers, setLayers] = useState([])
   const [visibleLayers, setVisibleLayers] = useState(new Set())
   const [zoom, setZoom] = useState(1)
@@ -33,39 +20,22 @@ export default function DwgViewer({ file }) {
     setLoading(true)
     const reader = new FileReader()
     reader.onload = async () => {
-      try {
-        const wasmInstance = await createModule({
-          locateFile: (path) => (path.endsWith('.wasm') ? wasmUrl : path),
-        })
-        const libredwg = LibreDwg.createByWasmInstance(wasmInstance)
-        const dwgData = libredwg.dwg_read_data(reader.result, Dwg_File_Type.DWG)
-        const db = libredwg.convert(dwgData)
-        libredwg.dwg_free(dwgData)
-        setDbInfo({ libredwg, db })
-        const usedLayers = new Set()
-        db.entities.forEach((e) => usedLayers.add(e.layer))
-        db.tables.BLOCK_RECORD.entries.forEach((b) =>
-          b.entities.forEach((e) => usedLayers.add(e.layer))
-        )
-        const layerNames = db.tables.LAYER.entries
-          .map((l) => l.name)
-          .filter((n) => usedLayers.has(n))
-        setLayers(layerNames)
-        setVisibleLayers(new Set(layerNames))
-      } finally {
-        setLoading(false)
-      }
+      const { layers: layerNames, svg: initialSvg } = await window.electronApi.loadDwg(
+        reader.result
+      )
+      setLayers(layerNames)
+      setVisibleLayers(new Set(layerNames))
+      setSvg(initialSvg)
+      setLoading(false)
     }
     reader.readAsArrayBuffer(file)
   }, [file])
 
   useEffect(() => {
-    if (!dbInfo) return
-    const { libredwg, db } = dbInfo
-    const filtered = filterDbByLayers(db, visibleLayers)
-    const svgStr = libredwg.dwg_to_svg(filtered)
-    setSvg(svgStr)
-  }, [dbInfo, visibleLayers])
+    if (!layers.length) return
+    const layerList = Array.from(visibleLayers)
+    window.electronApi.renderDwg(layerList).then(setSvg)
+  }, [visibleLayers, layers])
 
 
   useEffect(() => {
