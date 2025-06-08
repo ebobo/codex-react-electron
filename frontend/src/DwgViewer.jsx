@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 
 export default function DwgViewer({ file }) {
+  const hasElectron = typeof window !== 'undefined' && window.electronApi
   const [svg, setSvg] = useState(null)
   const [layers, setLayers] = useState([])
   const [visibleLayers, setVisibleLayers] = useState(new Set())
@@ -17,6 +18,10 @@ export default function DwgViewer({ file }) {
 
   useEffect(() => {
     if (!file) return
+    if (!hasElectron) {
+      console.error('DWG viewer requires the Electron build to load drawings.')
+      return
+    }
     setLoading(true)
     const reader = new FileReader()
     reader.onload = async () => {
@@ -33,13 +38,15 @@ export default function DwgViewer({ file }) {
       }
     }
     reader.readAsArrayBuffer(file)
-  }, [file])
+  }, [file, hasElectron])
 
   useEffect(() => {
     if (!layers.length) return
-    const layerList = Array.from(visibleLayers)
-    window.electronApi.renderDwg(layerList).then(setSvg)
-  }, [visibleLayers, layers])
+    if (hasElectron) {
+      const layerList = Array.from(visibleLayers)
+      window.electronApi.renderDwg(layerList).then(setSvg)
+    }
+  }, [visibleLayers, layers, hasElectron])
 
 
   useEffect(() => {
@@ -176,6 +183,14 @@ export default function DwgViewer({ file }) {
   }
 
   const allSelected = layers.length > 0 && visibleLayers.size === layers.length
+
+  if (!hasElectron) {
+    return (
+      <div className="dwg-error">
+        DWG viewing is only available in the Electron version of this app.
+      </div>
+    )
+  }
 
   if (loading) {
     return <div className="dwg-loading">Loading drawing…</div>
