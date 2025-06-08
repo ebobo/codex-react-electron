@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
 import { Buffer } from 'node:buffer'
 
+
 // Use the CommonJS build of libredwg-web for better Node compatibility
 const require = createRequire(import.meta.url)
 const { createModule, LibreDwg, Dwg_File_Type } = require('@mlightcad/libredwg-web')
