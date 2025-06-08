@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef } from 'react'
 
 export default function DwgViewer({ file }) {
-  const isElectron =
-    typeof navigator !== 'undefined' &&
-    navigator.userAgent.toLowerCase().includes('electron')
-  const electronApi = isElectron ? window.electronApi : null
+  const electronApi =
+    typeof window !== 'undefined' && window.electronApi
+      ? window.electronApi
+      : null
   const hasElectron = !!electronApi
   const [svg, setSvg] = useState(null)
   const [layers, setLayers] = useState([])
@@ -42,7 +42,7 @@ export default function DwgViewer({ file }) {
       }
     }
     reader.readAsArrayBuffer(file)
-  }, [file, hasElectron])
+  }, [file, hasElectron, electronApi])
 
   useEffect(() => {
     if (!layers.length) return
@@ -50,7 +50,7 @@ export default function DwgViewer({ file }) {
       const layerList = Array.from(visibleLayers)
       electronApi.renderDwg(layerList).then(setSvg)
     }
-  }, [visibleLayers, layers, hasElectron])
+  }, [visibleLayers, layers, hasElectron, electronApi])
 
 
   useEffect(() => {
