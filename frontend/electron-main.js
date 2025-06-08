@@ -1,7 +1,11 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import path, { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { createModule, LibreDwg, Dwg_File_Type } from '@mlightcad/libredwg-web'
+import { createRequire } from 'node:module'
+
+// Use the CommonJS build of libredwg-web for better Node compatibility
+const require = createRequire(import.meta.url)
+const { createModule, LibreDwg, Dwg_File_Type } = require('@mlightcad/libredwg-web')
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
