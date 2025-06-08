@@ -20,13 +20,17 @@ export default function DwgViewer({ file }) {
     setLoading(true)
     const reader = new FileReader()
     reader.onload = async () => {
-      const { layers: layerNames, svg: initialSvg } = await window.electronApi.loadDwg(
-        reader.result
-      )
-      setLayers(layerNames)
-      setVisibleLayers(new Set(layerNames))
-      setSvg(initialSvg)
-      setLoading(false)
+      try {
+        const { layers: layerNames, svg: initialSvg } =
+          await window.electronApi.loadDwg(reader.result)
+        setLayers(layerNames)
+        setVisibleLayers(new Set(layerNames))
+        setSvg(initialSvg)
+      } catch (err) {
+        console.error('Failed to load DWG:', err)
+      } finally {
+        setLoading(false)
+      }
     }
     reader.readAsArrayBuffer(file)
   }, [file])
