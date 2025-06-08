@@ -11,3 +11,5 @@ npm run electron
 ```
 
 The script builds the React frontend and then launches Electron. Converting DWG files requires `@mlightcad/libredwg-web`, which is included as a dependency.
+
+The Vite config sets a relative base path during builds so the bundled files load correctly when opened via `file://` by Electron.
