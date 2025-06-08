@@ -1,11 +1,13 @@
 import { useEffect, useState, useRef } from 'react'
 
 export default function DwgViewer({ file }) {
+  const isElectron =
+    typeof navigator !== 'undefined' &&
+    navigator.userAgent.includes('Electron')
   const electronApi =
     typeof window !== 'undefined' && window.electronApi
       ? window.electronApi
       : null
-  const hasElectron = !!electronApi
   const [svg, setSvg] = useState(null)
   const [layers, setLayers] = useState([])
   const [visibleLayers, setVisibleLayers] = useState(new Set())
@@ -21,9 +23,19 @@ export default function DwgViewer({ file }) {
   const panState = useRef(null)
 
   useEffect(() => {
+    if (isElectron && !electronApi) {
+      console.error(
+        'Electron detected but window.electronApi is undefined. Check preload script.',
+      )
+    }
+  }, [isElectron, electronApi])
+
+  useEffect(() => {
     if (!file) return
-    if (!hasElectron) {
-      console.error('DWG viewer requires the Electron build to load drawings.')
+    if (!isElectron || !electronApi) {
+      console.error(
+        'DWG viewer requires the Electron build with a preload script to load drawings.',
+      )
       return
     }
     setLoading(true)
@@ -42,15 +54,13 @@ export default function DwgViewer({ file }) {
       }
     }
     reader.readAsArrayBuffer(file)
-  }, [file, hasElectron, electronApi])
+  }, [file, isElectron, electronApi])
 
   useEffect(() => {
-    if (!layers.length) return
-    if (hasElectron) {
-      const layerList = Array.from(visibleLayers)
-      electronApi.renderDwg(layerList).then(setSvg)
-    }
-  }, [visibleLayers, layers, hasElectron, electronApi])
+    if (!layers.length || !isElectron || !electronApi) return
+    const layerList = Array.from(visibleLayers)
+    electronApi.renderDwg(layerList).then(setSvg)
+  }, [visibleLayers, layers, isElectron, electronApi])
 
 
   useEffect(() => {
@@ -188,10 +198,18 @@ export default function DwgViewer({ file }) {
 
   const allSelected = layers.length > 0 && visibleLayers.size === layers.length
 
-  if (!hasElectron) {
+  if (!isElectron) {
     return (
       <div className="dwg-error">
         DWG viewing is only available in the Electron version of this app.
+      </div>
+    )
+  }
+
+  if (!electronApi) {
+    return (
+      <div className="dwg-error">
+        Failed to access Electron APIs. Check the preload script configuration.
       </div>
     )
   }
