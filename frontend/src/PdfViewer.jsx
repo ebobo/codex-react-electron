@@ -17,6 +17,8 @@ export default function PdfViewer({ file }) {
   const [zoom, setZoom] = useState(1)
   const [overlay, setOverlay] = useState({ left: 0, top: 0, width: 0, height: 0 })
   const dragState = useRef(null)
+  const [icons, setIcons] = useState([])
+  const dragIcon = useRef(null)
 
   const zoomIn = () => setZoom((z) => z * 1.1)
   const zoomOut = () => setZoom((z) => z / 1.1)
@@ -97,6 +99,58 @@ export default function PdfViewer({ file }) {
     container.style.cursor = canPan ? 'grab' : 'default'
   }, [zoom, page])
 
+  const handleIconPointerDown = (id) => (e) => {
+    e.stopPropagation()
+    dragIcon.current = { id, x: e.clientX, y: e.clientY }
+    window.addEventListener('pointermove', handleIconMove)
+    window.addEventListener('pointerup', handleIconUp)
+  }
+  const handleIconMove = (e) => {
+    if (!dragIcon.current) return
+    const { id, x, y } = dragIcon.current
+    const dx = e.clientX - x
+    const dy = e.clientY - y
+    dragIcon.current.x = e.clientX
+    dragIcon.current.y = e.clientY
+    setIcons((icons) =>
+      icons.map((ic) =>
+        ic.id === id ? { ...ic, x: ic.x + dx, y: ic.y + dy } : ic
+      )
+    )
+  }
+  const handleIconUp = () => {
+    dragIcon.current = null
+    window.removeEventListener('pointermove', handleIconMove)
+    window.removeEventListener('pointerup', handleIconUp)
+  }
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    const allow = (e) => e.preventDefault()
+    const handleDrop = (e) => {
+      e.preventDefault()
+      const src = e.dataTransfer.getData('application/x-icon-src')
+      if (!src) return
+      const rect = container.getBoundingClientRect()
+      setIcons((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          src,
+          x: e.clientX - rect.left - 64,
+          y: e.clientY - rect.top - 64,
+        },
+      ])
+    }
+    container.addEventListener('dragover', allow)
+    container.addEventListener('drop', handleDrop)
+    return () => {
+      container.removeEventListener('dragover', allow)
+      container.removeEventListener('drop', handleDrop)
+    }
+  }, [])
+
   useEffect(() => {
     const container = containerRef.current
     const mini = miniCanvasRef.current
@@ -138,6 +192,16 @@ export default function PdfViewer({ file }) {
     <Box className="pdf-viewer">
       <Box className="pdf-container" ref={containerRef}>
         <canvas ref={canvasRef} />
+        {icons.map((icon) => (
+          <img
+            key={icon.id}
+            src={icon.src}
+            className="overlay-icon"
+            style={{ left: icon.x, top: icon.y }}
+            onPointerDown={handleIconPointerDown(icon.id)}
+            draggable={false}
+          />
+        ))}
       </Box>
       <Box className="pdf-sidebar">
         <Box className="pdf-mini-section">
