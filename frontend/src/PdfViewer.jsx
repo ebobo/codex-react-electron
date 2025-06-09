@@ -18,8 +18,8 @@ export default function PdfViewer({ file }) {
   const [overlay, setOverlay] = useState({ left: 0, top: 0, width: 0, height: 0 })
   const dragState = useRef(null)
 
-  const zoomIn = () => setZoom((z) => z * 1.2)
-  const zoomOut = () => setZoom((z) => z / 1.2)
+  const zoomIn = () => setZoom((z) => z * 1.1)
+  const zoomOut = () => setZoom((z) => z / 1.1)
   const resetZoom = () => setZoom(1)
 
   useEffect(() => {

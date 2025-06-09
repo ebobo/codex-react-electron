@@ -21,9 +21,14 @@ function App() {
     <Box className="App">
       <AppBar position="static">
         <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1, mr: 2 }}>
+          <Typography variant="h6" sx={{ mr: 2 }}>
             Drawing Viewer
           </Typography>
+          {file && (
+            <Typography sx={{ flexGrow: 1, mr: 2, textAlign: 'center' }}>
+              {file.name}
+            </Typography>
+          )}
           <Button variant="contained" component="label">
             Select File
             <input hidden type="file" accept=".pdf,.dwg,.jpg,.jpeg" onChange={handleFile} />
