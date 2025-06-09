@@ -27,6 +27,7 @@ export default function ImageViewer({ file }) {
   }
   const handleMarkerDown = (index) => (e) => {
     e.stopPropagation()
+    e.preventDefault()
     const el = e.currentTarget
     el.classList.add('dragging')
     const startX = e.clientX
