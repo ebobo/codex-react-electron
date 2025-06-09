@@ -140,24 +140,25 @@ export default function PdfViewer({ file }) {
         <canvas ref={canvasRef} />
       </Box>
       <Box className="pdf-sidebar">
-        <Box className="pdf-mini-wrapper">
-          <canvas ref={miniCanvasRef} className="pdf-mini" />
-          <Box
-            className="pdf-mini-overlay"
-            sx={{
-              left: overlay.left,
-              top: overlay.top,
-              width: overlay.width,
-              height: overlay.height,
-            }}
-          />
-        </Box>
-        <Box className="pdf-controls">
-          <Box className="zoom-controls">
-            <Box className="zoom-buttons">
-              <IconButton onClick={zoomOut} size="small">
-                <ZoomOutIcon />
-              </IconButton>
+        <Box className="pdf-mini-section">
+          <Box className="pdf-mini-wrapper">
+            <canvas ref={miniCanvasRef} className="pdf-mini" />
+            <Box
+              className="pdf-mini-overlay"
+              sx={{
+                left: overlay.left,
+                top: overlay.top,
+                width: overlay.width,
+                height: overlay.height,
+              }}
+            />
+          </Box>
+          <Box className="pdf-controls">
+            <Box className="zoom-controls">
+              <Box className="zoom-buttons">
+                <IconButton onClick={zoomOut} size="small">
+                  <ZoomOutIcon />
+                </IconButton>
               <IconButton onClick={resetZoom} size="small">
                 <RefreshIcon />
               </IconButton>
@@ -169,6 +170,7 @@ export default function PdfViewer({ file }) {
               {Math.round(zoom * 100)}%
             </Typography>
           </Box>
+        </Box>
         </Box>
       </Box>
     </Box>
