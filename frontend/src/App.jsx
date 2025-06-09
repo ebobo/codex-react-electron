@@ -3,7 +3,6 @@ import { AppBar, Toolbar, Typography, Container, Button, Box } from '@mui/materi
 import PdfViewer from './PdfViewer.jsx'
 import DwgViewer from './DwgViewer.jsx'
 import ImageViewer from './ImageViewer.jsx'
-import IconPalette from './IconPalette.jsx'
 import './App.css'
 
 function App() {
@@ -37,7 +36,6 @@ function App() {
         </Toolbar>
       </AppBar>
       <Container sx={{ mt: 2 }}>
-        <IconPalette />
         {file && fileType === 'pdf' && <PdfViewer file={file} />}
         {file && fileType === 'dwg' && <DwgViewer file={file} />}
         {file && (fileType === 'jpg' || fileType === 'jpeg') && (

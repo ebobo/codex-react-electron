@@ -39,8 +39,6 @@ export default function DwgViewer({ file }) {
   const svgContainerRef = useRef(null)
   const miniRef = useRef(null)
   const panState = useRef(null)
-  const [icons, setIcons] = useState([])
-  const dragIcon = useRef(null)
 
   useEffect(() => {
     if (!file) return
@@ -108,33 +106,6 @@ export default function DwgViewer({ file }) {
     if (!svgContainerRef.current) return
     svgContainerRef.current.innerHTML = svg
   }, [svg])
-
-  useEffect(() => {
-    const container = svgContainerRef.current
-    if (!container) return
-    const allow = (e) => e.preventDefault()
-    const handleDrop = (e) => {
-      e.preventDefault()
-      const src = e.dataTransfer.getData('application/x-icon-src')
-      if (!src) return
-      const rect = container.getBoundingClientRect()
-      setIcons((prev) => [
-        ...prev,
-        {
-          id: Date.now(),
-          src,
-          x: e.clientX - rect.left - 64,
-          y: e.clientY - rect.top - 64,
-        },
-      ])
-    }
-    container.addEventListener('dragover', allow)
-    container.addEventListener('drop', handleDrop)
-    return () => {
-      container.removeEventListener('dragover', allow)
-      container.removeEventListener('drop', handleDrop)
-    }
-  }, [])
 
   useEffect(() => {
     if (!svgContainerRef.current) return
@@ -237,31 +208,6 @@ export default function DwgViewer({ file }) {
     }
   }, [svg, zoom, pan])
 
-  const handleIconPointerDown = (id) => (e) => {
-    e.stopPropagation()
-    dragIcon.current = { id, x: e.clientX, y: e.clientY }
-    window.addEventListener('pointermove', handleIconMove)
-    window.addEventListener('pointerup', handleIconUp)
-  }
-  const handleIconMove = (e) => {
-    if (!dragIcon.current) return
-    const { id, x, y } = dragIcon.current
-    const dx = e.clientX - x
-    const dy = e.clientY - y
-    dragIcon.current.x = e.clientX
-    dragIcon.current.y = e.clientY
-    setIcons((icons) =>
-      icons.map((ic) =>
-        ic.id === id ? { ...ic, x: ic.x + dx, y: ic.y + dy } : ic
-      )
-    )
-  }
-  const handleIconUp = () => {
-    dragIcon.current = null
-    window.removeEventListener('pointermove', handleIconMove)
-    window.removeEventListener('pointerup', handleIconUp)
-  }
-
   const toggleAllLayers = (checked) => {
     if (checked) setVisibleLayers(new Set(layers))
     else setVisibleLayers(new Set())
@@ -275,18 +221,7 @@ export default function DwgViewer({ file }) {
 
   return svg ? (
       <Box className="dwg-viewer">
-        <Box className="dwg-container" ref={svgContainerRef}>
-          {icons.map((icon) => (
-            <img
-              key={icon.id}
-              src={icon.src}
-              className="overlay-icon"
-              style={{ left: icon.x, top: icon.y }}
-              onPointerDown={handleIconPointerDown(icon.id)}
-              draggable={false}
-            />
-          ))}
-        </Box>
+        <Box className="dwg-container" ref={svgContainerRef} />
         <Box className="dwg-sidebar">
           <Box className="dwg-mini-section">
             <Box className="dwg-mini-wrapper" ref={miniRef}>
