@@ -1,5 +1,17 @@
 import { useEffect, useState, useRef } from 'react'
 import { createModule, LibreDwg, Dwg_File_Type } from '@mlightcad/libredwg-web'
+import {
+  Box,
+  IconButton,
+  Typography,
+  Checkbox,
+  FormControlLabel,
+} from '@mui/material'
+import ZoomOutIcon from '@mui/icons-material/ZoomOut'
+import ZoomInIcon from '@mui/icons-material/ZoomIn'
+import RefreshIcon from '@mui/icons-material/Refresh'
+import RotateLeftIcon from '@mui/icons-material/RotateLeft'
+import RotateRightIcon from '@mui/icons-material/RotateRight'
 import wasmUrl from '../node_modules/@mlightcad/libredwg-web/wasm/libredwg-web.wasm?url'
 
 function filterDbByLayers(db, layerSet) {
@@ -208,68 +220,85 @@ export default function DwgViewer({ file }) {
   }
 
   return svg ? (
-      <div className="dwg-viewer">
-        <div className="dwg-container" ref={svgContainerRef} />
-        <div className="dwg-sidebar">
-          <div className="dwg-mini-wrapper" ref={miniRef}>
-            <div className="dwg-mini" />
-            <div
+      <Box className="dwg-viewer">
+        <Box className="dwg-container" ref={svgContainerRef} />
+        <Box className="dwg-sidebar">
+          <Box className="dwg-mini-wrapper" ref={miniRef}>
+            <Box className="dwg-mini" />
+            <Box
               className="dwg-mini-overlay"
-              style={{
+              sx={{
                 left: overlay.left,
                 top: overlay.top,
                 width: overlay.width,
                 height: overlay.height,
               }}
             />
-            <div className="dwg-controls">
-              <div className="zoom-controls">
-                <div className="zoom-buttons">
-                  <button onClick={zoomOut}>-</button>
-                  <button onClick={resetZoom}>reset</button>
-                  <button onClick={zoomIn}>+</button>
-                </div>
-                <span className="zoom-indicator">{Math.round(zoom * 100)}%</span>
-              </div>
-              <div className="rotate-controls">
-                <button onClick={rotateLeft}>⟲</button>
-                <button onClick={resetRotation}>reset</button>
-                <button onClick={rotateRight}>⟳</button>
-              </div>
-            </div>
-          </div>
-          <div className="dwg-layers">
-            <div
+            <Box className="dwg-controls">
+              <Box className="zoom-controls">
+                <Box className="zoom-buttons">
+                  <IconButton onClick={zoomOut} size="small">
+                    <ZoomOutIcon />
+                  </IconButton>
+                  <IconButton onClick={resetZoom} size="small">
+                    <RefreshIcon />
+                  </IconButton>
+                  <IconButton onClick={zoomIn} size="small">
+                    <ZoomInIcon />
+                  </IconButton>
+                </Box>
+                <Typography className="zoom-indicator">
+                  {Math.round(zoom * 100)}%
+                </Typography>
+              </Box>
+              <Box className="rotate-controls">
+                <IconButton onClick={rotateLeft} size="small">
+                  <RotateLeftIcon />
+                </IconButton>
+                <IconButton onClick={resetRotation} size="small">
+                  <RefreshIcon />
+                </IconButton>
+                <IconButton onClick={rotateRight} size="small">
+                  <RotateRightIcon />
+                </IconButton>
+              </Box>
+            </Box>
+          </Box>
+          <Box className="dwg-layers">
+            <Typography
               className="layers-header"
               onClick={() => setLayersOpen((o) => !o)}
             >
             Layers {layersOpen ? '▾' : '▸'}
-          </div>
+          </Typography>
           {layersOpen && (
-            <div className="layers-list">
-              <label>
-                <input
-                  type="checkbox"
-                  ref={selectAllRef}
-                  checked={allSelected}
-                  onChange={(e) => toggleAllLayers(e.target.checked)}
-                />
-                Select All
-              </label>
-              {layers.map((l) => (
-                <label key={l}>
-                  <input
-                    type="checkbox"
-                    checked={visibleLayers.has(l)}
-                    onChange={() => toggleLayer(l)}
+            <Box className="layers-list">
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    ref={selectAllRef}
+                    checked={allSelected}
+                    onChange={(e) => toggleAllLayers(e.target.checked)}
                   />
-                  {l}
-                </label>
+                }
+                label="Select All"
+              />
+              {layers.map((l) => (
+                <FormControlLabel
+                  key={l}
+                  control={
+                    <Checkbox
+                      checked={visibleLayers.has(l)}
+                      onChange={() => toggleLayer(l)}
+                    />
+                  }
+                  label={l}
+                />
               ))}
-            </div>
+            </Box>
           )}
-          </div>
-        </div>
-      </div>
+          </Box>
+        </Box>
+      </Box>
     ) : null
   }

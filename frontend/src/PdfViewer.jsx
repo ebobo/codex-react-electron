@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist'
+import { Box, Button, IconButton, Typography } from '@mui/material'
+import ZoomOutIcon from '@mui/icons-material/ZoomOut'
+import ZoomInIcon from '@mui/icons-material/ZoomIn'
+import RefreshIcon from '@mui/icons-material/Refresh'
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 
 // Set the worker source for pdfjs to a bundled worker script
@@ -131,34 +135,42 @@ export default function PdfViewer({ file }) {
 
 
   return page ? (
-    <div className="pdf-viewer">
-      <div className="pdf-container" ref={containerRef}>
+    <Box className="pdf-viewer">
+      <Box className="pdf-container" ref={containerRef}>
         <canvas ref={canvasRef} />
-      </div>
-      <div className="pdf-sidebar">
-        <div className="pdf-mini-wrapper">
+      </Box>
+      <Box className="pdf-sidebar">
+        <Box className="pdf-mini-wrapper">
           <canvas ref={miniCanvasRef} className="pdf-mini" />
-          <div
+          <Box
             className="pdf-mini-overlay"
-            style={{
+            sx={{
               left: overlay.left,
               top: overlay.top,
               width: overlay.width,
               height: overlay.height,
             }}
           />
-        </div>
-        <div className="pdf-controls">
-          <div className="zoom-controls">
-            <div className="zoom-buttons">
-              <button onClick={zoomOut}>-</button>
-              <button onClick={resetZoom}>reset</button>
-              <button onClick={zoomIn}>+</button>
-            </div>
-            <span className="zoom-indicator">{Math.round(zoom * 100)}%</span>
-          </div>
-        </div>
-      </div>
-    </div>
+        </Box>
+        <Box className="pdf-controls">
+          <Box className="zoom-controls">
+            <Box className="zoom-buttons">
+              <IconButton onClick={zoomOut} size="small">
+                <ZoomOutIcon />
+              </IconButton>
+              <IconButton onClick={resetZoom} size="small">
+                <RefreshIcon />
+              </IconButton>
+              <IconButton onClick={zoomIn} size="small">
+                <ZoomInIcon />
+              </IconButton>
+            </Box>
+            <Typography className="zoom-indicator">
+              {Math.round(zoom * 100)}%
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   ) : null
 }
