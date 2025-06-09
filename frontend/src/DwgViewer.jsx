@@ -13,7 +13,6 @@ import RefreshIcon from '@mui/icons-material/Refresh'
 import RotateLeftIcon from '@mui/icons-material/RotateLeft'
 import RotateRightIcon from '@mui/icons-material/RotateRight'
 import wasmUrl from '../node_modules/@mlightcad/libredwg-web/wasm/libredwg-web.wasm?url'
-import IconPalette from './IconPalette.jsx'
 import { loadConfig, saveConfig } from './configStorage.js'
 
 function filterDbByLayers(db, layerSet) {
@@ -53,6 +52,27 @@ export default function DwgViewer({ file }) {
     const x = (e.clientX - rect.left - pan.x) / zoom
     const y = (e.clientY - rect.top - pan.y) / zoom
     setMarkers((prev) => [...prev, { x, y, src }])
+  }
+  const handleMarkerDown = (index) => (e) => {
+    e.stopPropagation()
+    const startX = e.clientX
+    const startY = e.clientY
+    const startPos = markers[index]
+    const move = (ev) => {
+      const dx = (ev.clientX - startX) / zoom
+      const dy = (ev.clientY - startY) / zoom
+      setMarkers((prev) => {
+        const arr = [...prev]
+        arr[index] = { ...startPos, x: startPos.x + dx, y: startPos.y + dy }
+        return arr
+      })
+    }
+    const up = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
   }
 
   useEffect(() => {
@@ -280,6 +300,7 @@ export default function DwgViewer({ file }) {
                 className="config-marker"
                 style={{ left: m.x, top: m.y }}
                 alt="marker"
+                onPointerDown={handleMarkerDown(i)}
               />
             ))}
           </div>
@@ -328,7 +349,6 @@ export default function DwgViewer({ file }) {
               </Box>
             </Box>
           </Box>
-          <IconPalette />
           <Box className="dwg-layers">
             <Typography
               className="layers-header"

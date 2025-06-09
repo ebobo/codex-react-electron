@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist'
 import { Box, Button, IconButton, Typography } from '@mui/material'
-import IconPalette from './IconPalette.jsx'
 import { loadConfig, saveConfig } from './configStorage.js'
 import ZoomOutIcon from '@mui/icons-material/ZoomOut'
 import ZoomInIcon from '@mui/icons-material/ZoomIn'
@@ -29,6 +28,27 @@ export default function PdfViewer({ file }) {
     const x = (e.clientX - rect.left) / zoom
     const y = (e.clientY - rect.top) / zoom
     setMarkers((prev) => [...prev, { x, y, src }])
+  }
+  const handleMarkerDown = (index) => (e) => {
+    e.stopPropagation()
+    const startX = e.clientX
+    const startY = e.clientY
+    const startPos = markers[index]
+    const move = (ev) => {
+      const dx = (ev.clientX - startX) / zoom
+      const dy = (ev.clientY - startY) / zoom
+      setMarkers((prev) => {
+        const arr = [...prev]
+        arr[index] = { ...startPos, x: startPos.x + dx, y: startPos.y + dy }
+        return arr
+      })
+    }
+    const up = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
   }
 
   const zoomIn = () => setZoom((z) => z * 1.1)
@@ -181,6 +201,7 @@ export default function PdfViewer({ file }) {
               className="config-marker"
               style={{ left: m.x * zoom, top: m.y * zoom }}
               alt="marker"
+              onPointerDown={handleMarkerDown(i)}
             />
           ))}
         </div>
@@ -217,7 +238,6 @@ export default function PdfViewer({ file }) {
             </Typography>
           </Box>
         </Box>
-        <IconPalette />
         </Box>
       </Box>
     </Box>

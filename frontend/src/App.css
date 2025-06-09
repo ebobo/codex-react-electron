@@ -297,5 +297,25 @@
   position: absolute;
   width: 32px;
   height: 32px;
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: move;
+}
+
+.icon-container {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid #888;
+  justify-content: center;
+}
+
+.icon-palette {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.palette-icon {
+  width: 100px;
+  height: 100px;
+  user-select: none;
 }
