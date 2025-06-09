@@ -285,27 +285,3 @@
   font-size: 1.5rem;
 }
 
-
-.icon-palette {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.icon-palette img {
-  width: 128px;
-  height: 128px;
-  object-fit: contain;
-  cursor: grab;
-}
-
-.overlay-icon {
-  position: absolute;
-  width: 128px;
-  height: 128px;
-  user-select: none;
-  cursor: grab;
-}
-.overlay-icon:active {
-  cursor: grabbing;
-}
