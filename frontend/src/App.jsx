@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { AppBar, Toolbar, Typography, Container, Button, Box } from '@mui/material'
 import PdfViewer from './PdfViewer.jsx'
 import DwgViewer from './DwgViewer.jsx'
+import ImageViewer from './ImageViewer.jsx'
 import './App.css'
 
 function App() {
@@ -16,15 +18,34 @@ function App() {
   }
 
   return (
-    <div className="App">
-      <h1>Drawing Viewer</h1>
-      <input type="file" accept=".pdf,.dwg" onChange={handleFile} />
-      {file && fileType === 'pdf' && <PdfViewer file={file} />}
-      {file && fileType === 'dwg' && <DwgViewer file={file} />}
-      {file && !['pdf', 'dwg'].includes(fileType) && (
-        <p>Unsupported file type.</p>
-      )}
-    </div>
+    <Box className="App">
+      <AppBar position="static">
+        <Toolbar>
+          <Typography variant="h6" sx={{ mr: 2 }}>
+            Drawing Viewer
+          </Typography>
+          {file && (
+            <Typography sx={{ flexGrow: 1, mr: 2, textAlign: 'center' }}>
+              {file.name}
+            </Typography>
+          )}
+          <Button variant="contained" component="label">
+            Select File
+            <input hidden type="file" accept=".pdf,.dwg,.jpg,.jpeg" onChange={handleFile} />
+          </Button>
+        </Toolbar>
+      </AppBar>
+      <Container sx={{ mt: 2 }}>
+        {file && fileType === 'pdf' && <PdfViewer file={file} />}
+        {file && fileType === 'dwg' && <DwgViewer file={file} />}
+        {file && (fileType === 'jpg' || fileType === 'jpeg') && (
+          <ImageViewer file={file} />
+        )}
+        {file && !['pdf', 'dwg', 'jpg', 'jpeg'].includes(fileType) && (
+          <Typography>Unsupported file type.</Typography>
+        )}
+      </Container>
+    </Box>
   )
 }
 
