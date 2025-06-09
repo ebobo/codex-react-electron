@@ -21,16 +21,21 @@ export default function DwgViewer({ file }) {
   const miniRef = useRef(null)
   const panState = useRef(null)
 
-  // Grab the Electron API once the preload script signals readiness
+  // Grab the Electron API when it becomes available
   useEffect(() => {
     if (electronApi || typeof window === 'undefined') return
-    const handler = () => {
-      if (window.electronApi) setElectronApi(window.electronApi)
+    const attempt = () => {
+      if (window.electronApi) {
+        setElectronApi(window.electronApi)
+        return true
+      }
+      return false
     }
-    window.addEventListener('electron-api-ready', handler)
-    // Check in case the event fired before listener registration
-    if (window.electronApi) handler()
-    return () => window.removeEventListener('electron-api-ready', handler)
+    if (attempt()) return
+    const id = setInterval(() => {
+      if (attempt()) clearInterval(id)
+    }, 100)
+    return () => clearInterval(id)
   }, [electronApi])
 
   useEffect(() => {
