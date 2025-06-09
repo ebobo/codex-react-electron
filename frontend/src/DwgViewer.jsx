@@ -95,8 +95,8 @@ export default function DwgViewer({ file }) {
     })
   }
 
-  const zoomIn = () => setZoom((z) => z * 1.2)
-  const zoomOut = () => setZoom((z) => z / 1.2)
+  const zoomIn = () => setZoom((z) => z * 1.1)
+  const zoomOut = () => setZoom((z) => z / 1.1)
   const resetZoom = () => setZoom(1)
   const rotateLeft = () => setRotation((r) => r - 5)
   const rotateRight = () => setRotation((r) => r + 5)

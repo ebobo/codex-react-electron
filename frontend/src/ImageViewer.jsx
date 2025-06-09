@@ -20,8 +20,8 @@ export default function ImageViewer({ file }) {
     return () => URL.revokeObjectURL(objectUrl)
   }, [file])
 
-  const zoomIn = () => setZoom((z) => z * 1.2)
-  const zoomOut = () => setZoom((z) => z / 1.2)
+  const zoomIn = () => setZoom((z) => z * 1.1)
+  const zoomOut = () => setZoom((z) => z / 1.1)
   const resetZoom = () => setZoom(1)
 
   useEffect(() => {
