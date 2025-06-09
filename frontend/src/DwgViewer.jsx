@@ -1,6 +1,12 @@
 import { useEffect, useState, useRef } from 'react'
 
 export default function DwgViewer({ file }) {
+  const isElectron =
+    typeof navigator !== 'undefined' &&
+    navigator.userAgent.includes('Electron')
+  const [electronApi, setElectronApi] = useState(() =>
+    typeof window !== 'undefined' && window.electronApi ? window.electronApi : null
+  )
   const [svg, setSvg] = useState(null)
   const [layers, setLayers] = useState([])
   const [visibleLayers, setVisibleLayers] = useState(new Set())
@@ -15,14 +21,45 @@ export default function DwgViewer({ file }) {
   const miniRef = useRef(null)
   const panState = useRef(null)
 
+  // Grab the Electron API when it becomes available
+  useEffect(() => {
+    if (electronApi || typeof window === 'undefined') return
+    const attempt = () => {
+      if (window.electronApi) {
+        setElectronApi(window.electronApi)
+        return true
+      }
+      return false
+    }
+    if (attempt()) return
+    const id = setInterval(() => {
+      if (attempt()) clearInterval(id)
+    }, 100)
+    return () => clearInterval(id)
+  }, [electronApi])
+
+  useEffect(() => {
+    if (isElectron && !electronApi) {
+      console.error(
+        'Electron detected but window.electronApi is undefined. Check preload script.',
+      )
+    }
+  }, [isElectron, electronApi])
+
   useEffect(() => {
     if (!file) return
+    if (!isElectron || !electronApi) {
+      console.error(
+        'DWG viewer requires the Electron build with a preload script to load drawings.',
+      )
+      return
+    }
     setLoading(true)
     const reader = new FileReader()
     reader.onload = async () => {
       try {
         const { layers: layerNames, svg: initialSvg } =
-          await window.electronApi.loadDwg(reader.result)
+          await electronApi.loadDwg(reader.result)
         setLayers(layerNames)
         setVisibleLayers(new Set(layerNames))
         setSvg(initialSvg)
@@ -33,13 +70,13 @@ export default function DwgViewer({ file }) {
       }
     }
     reader.readAsArrayBuffer(file)
-  }, [file])
+  }, [file, isElectron, electronApi])
 
   useEffect(() => {
-    if (!layers.length) return
+    if (!layers.length || !isElectron || !electronApi) return
     const layerList = Array.from(visibleLayers)
-    window.electronApi.renderDwg(layerList).then(setSvg)
-  }, [visibleLayers, layers])
+    electronApi.renderDwg(layerList).then(setSvg)
+  }, [visibleLayers, layers, isElectron, electronApi])
 
 
   useEffect(() => {
@@ -176,6 +213,22 @@ export default function DwgViewer({ file }) {
   }
 
   const allSelected = layers.length > 0 && visibleLayers.size === layers.length
+
+  if (!isElectron) {
+    return (
+      <div className="dwg-error">
+        DWG viewing is only available in the Electron version of this app.
+      </div>
+    )
+  }
+
+  if (!electronApi) {
+    return (
+      <div className="dwg-error">
+        Failed to access Electron APIs. Check the preload script configuration.
+      </div>
+    )
+  }
 
   if (loading) {
     return <div className="dwg-loading">Loading drawing…</div>
