@@ -223,17 +223,19 @@ export default function DwgViewer({ file }) {
       <Box className="dwg-viewer">
         <Box className="dwg-container" ref={svgContainerRef} />
         <Box className="dwg-sidebar">
-          <Box className="dwg-mini-wrapper" ref={miniRef}>
-            <Box className="dwg-mini" />
-            <Box
-              className="dwg-mini-overlay"
-              sx={{
-                left: overlay.left,
-                top: overlay.top,
-                width: overlay.width,
-                height: overlay.height,
-              }}
-            />
+          <Box className="dwg-mini-section">
+            <Box className="dwg-mini-wrapper" ref={miniRef}>
+              <Box className="dwg-mini" />
+              <Box
+                className="dwg-mini-overlay"
+                sx={{
+                  left: overlay.left,
+                  top: overlay.top,
+                  width: overlay.width,
+                  height: overlay.height,
+                }}
+              />
+            </Box>
             <Box className="dwg-controls">
               <Box className="zoom-controls">
                 <Box className="zoom-buttons">
