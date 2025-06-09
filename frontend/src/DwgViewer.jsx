@@ -4,10 +4,9 @@ export default function DwgViewer({ file }) {
   const isElectron =
     typeof navigator !== 'undefined' &&
     navigator.userAgent.includes('Electron')
-  const electronApi =
-    typeof window !== 'undefined' && window.electronApi
-      ? window.electronApi
-      : null
+  const [electronApi, setElectronApi] = useState(() =>
+    typeof window !== 'undefined' && window.electronApi ? window.electronApi : null
+  )
   const [svg, setSvg] = useState(null)
   const [layers, setLayers] = useState([])
   const [visibleLayers, setVisibleLayers] = useState(new Set())
@@ -21,6 +20,18 @@ export default function DwgViewer({ file }) {
   const svgContainerRef = useRef(null)
   const miniRef = useRef(null)
   const panState = useRef(null)
+
+  // Grab the Electron API once the preload script signals readiness
+  useEffect(() => {
+    if (electronApi || typeof window === 'undefined') return
+    const handler = () => {
+      if (window.electronApi) setElectronApi(window.electronApi)
+    }
+    window.addEventListener('electron-api-ready', handler)
+    // Check in case the event fired before listener registration
+    if (window.electronApi) handler()
+    return () => window.removeEventListener('electron-api-ready', handler)
+  }, [electronApi])
 
   useEffect(() => {
     if (isElectron && !electronApi) {
