@@ -43,9 +43,11 @@ function App() {
           </Button>
         </Toolbar>
       </AppBar>
-      <Box className="icon-container">
-        <IconPalette />
-      </Box>
+      {file && (
+        <Box className="icon-container">
+          <IconPalette />
+        </Box>
+      )}
       <Container sx={{ mt: 2 }}>
         {file && fileType === 'pdf' && <PdfViewer file={file} />}
         {file && fileType === 'dwg' && <DwgViewer file={file} />}
