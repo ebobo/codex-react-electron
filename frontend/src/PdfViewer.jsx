@@ -31,6 +31,9 @@ export default function PdfViewer({ file }) {
   }
   const handleMarkerDown = (index) => (e) => {
     e.stopPropagation()
+    e.preventDefault()
+    const el = e.currentTarget
+    el.classList.add('dragging')
     const startX = e.clientX
     const startY = e.clientY
     const startPos = markers[index]
@@ -46,6 +49,7 @@ export default function PdfViewer({ file }) {
     const up = () => {
       window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerup', up)
+      el.classList.remove('dragging')
     }
     window.addEventListener('pointermove', move)
     window.addEventListener('pointerup', up)

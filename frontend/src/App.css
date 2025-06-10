@@ -299,6 +299,13 @@
   height: 32px;
   pointer-events: auto;
   cursor: move;
+  transition: transform 0.1s;
+}
+
+.config-marker:hover,
+.config-marker.dragging {
+  transform: scale(1.2);
+  cursor: grab;
 }
 
 .icon-container {
@@ -315,7 +322,7 @@
 }
 
 .palette-icon {
-  width: 100px;
-  height: 100px;
+  width: 54px;
+  height: 54px;
   user-select: none;
 }
