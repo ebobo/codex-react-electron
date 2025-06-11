@@ -11,6 +11,7 @@ import PdfViewer from './PdfViewer.jsx'
 import DwgViewer from './DwgViewer.jsx'
 import ImageViewer from './ImageViewer.jsx'
 import IconPalette from './IconPalette.jsx'
+import appIcon from './assets/icon.png'
 import './App.css'
 
 function App() {
@@ -48,7 +49,10 @@ function App() {
           <IconPalette />
         </Box>
       )}
-      <Container sx={{ mt: 2 }}>
+      <Container sx={{ mt: 2, textAlign: 'center' }}>
+        {!file && (
+          <img src={appIcon} alt="App icon" className="start-icon" />
+        )}
         {file && fileType === 'pdf' && <PdfViewer file={file} />}
         {file && fileType === 'dwg' && <DwgViewer file={file} />}
         {file && (fileType === 'jpg' || fileType === 'jpeg') && (
