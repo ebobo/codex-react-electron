@@ -326,3 +326,9 @@
   height: 54px;
   user-select: none;
 }
+
+.start-icon {
+  width: 200px;
+  display: block;
+  margin: 2rem auto 0;
+}

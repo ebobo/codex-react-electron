@@ -4,7 +4,13 @@ import { CssBaseline, ThemeProvider, createTheme } from '@mui/material'
 import './index.css'
 import App from './App.jsx'
 
-const theme = createTheme()
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#085e21',
+    },
+  },
+})
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

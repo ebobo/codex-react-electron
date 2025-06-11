@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import icon from './assets/icon.png'
 import {
   AppBar,
   Toolbar,
@@ -43,6 +44,11 @@ function App() {
           </Button>
         </Toolbar>
       </AppBar>
+      {!file && (
+        <Box sx={{ mt: 4, textAlign: 'center' }}>
+          <img src={icon} alt="App icon" className="start-icon" />
+        </Box>
+      )}
       {file && (
         <Box className="icon-container">
           <IconPalette />
