@@ -41,3 +41,8 @@ After the dev server starts, open the printed local URL in your browser to try t
 - Mini map preview with red overlay to show the current viewport.
 - Zoom percentage indicators and reset buttons for both viewers.
 - Viewer area expands to nearly the full height of the browser window by default.
+- Drag icons from the palette to place configuration markers.
+- The icon palette appears only after a file is loaded.
+- Palette icons are 54×54 pixels and enlarge slightly when hovered or dragged.
+- Marker positions are saved per file using local storage.
+- Dragging markers does not pan the canvas.
