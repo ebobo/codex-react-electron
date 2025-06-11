@@ -326,3 +326,10 @@
   height: 54px;
   user-select: none;
 }
+
+.start-icon {
+  max-width: 120px;
+  height: auto;
+  display: block;
+  margin: 0 auto 1rem;
+}
