@@ -23,7 +23,7 @@ export default function ImageViewer({ file }) {
     const rect = e.currentTarget.getBoundingClientRect()
     const x = (e.clientX - rect.left) / zoom
     const y = (e.clientY - rect.top) / zoom
-    setMarkers((prev) => [...prev, { x, y, src }])
+    setMarkers((prev) => [...prev, { x, y, src, size: 32 }])
   }
   const handleMarkerDown = (index) => (e) => {
     e.stopPropagation()
@@ -185,7 +185,12 @@ export default function ImageViewer({ file }) {
               key={i}
               src={m.src}
               className="config-marker"
-              style={{ left: m.x * zoom, top: m.y * zoom }}
+              style={{
+                left: m.x * zoom,
+                top: m.y * zoom,
+                width: m.size || 32,
+                height: m.size || 32,
+              }}
               alt="marker"
               onPointerDown={handleMarkerDown(i)}
             />

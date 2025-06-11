@@ -14,6 +14,8 @@ import RotateLeftIcon from '@mui/icons-material/RotateLeft'
 import RotateRightIcon from '@mui/icons-material/RotateRight'
 import wasmUrl from '../node_modules/@mlightcad/libredwg-web/wasm/libredwg-web.wasm?url'
 import { loadConfig, saveConfig } from './configStorage.js'
+import autroGuard from './assets/AutroGuard.png'
+import MapIcon from '@mui/icons-material/Map'
 
 function filterDbByLayers(db, layerSet) {
   const filtered = structuredClone(db)
@@ -51,7 +53,7 @@ export default function DwgViewer({ file }) {
     const rect = e.currentTarget.getBoundingClientRect()
     const x = (e.clientX - rect.left - pan.x) / zoom
     const y = (e.clientY - rect.top - pan.y) / zoom
-    setMarkers((prev) => [...prev, { x, y, src }])
+    setMarkers((prev) => [...prev, { x, y, src, size: 32 }])
   }
   const handleMarkerDown = (index) => (e) => {
     e.stopPropagation()
@@ -271,6 +273,28 @@ export default function DwgViewer({ file }) {
     }
   }, [svg, zoom, pan])
 
+  const isDetectorLayer = (name) =>
+    name.toLowerCase() === 'detector' || name.toLowerCase() === 'detektor'
+
+  const mapDetectors = (layerName) => {
+    if (!svgRef.current) return
+    const svgEl = svgRef.current.querySelector('svg')
+    if (!svgEl) return
+    const group = svgEl.querySelector(
+      `g[id*="${layerName}"] , g[inkscape\\:label*="${layerName}"]`
+    )
+    if (!group) return
+    const circles = group.querySelectorAll('circle')
+    const newMarkers = Array.from(circles).map((c) => {
+      const cx = parseFloat(c.getAttribute('cx') || 0)
+      const cy = parseFloat(c.getAttribute('cy') || 0)
+      const r = parseFloat(c.getAttribute('r') || 0)
+      return { x: cx, y: cy, src: autroGuard, size: r * 2 * 1.2 || 32 }
+    })
+    if (newMarkers.length)
+      setMarkers((prev) => [...prev, ...newMarkers])
+  }
+
   const toggleAllLayers = (checked) => {
     if (checked) setVisibleLayers(new Set(layers))
     else setVisibleLayers(new Set())
@@ -302,7 +326,7 @@ export default function DwgViewer({ file }) {
                 key={i}
                 src={m.src}
                 className="config-marker"
-                style={{ left: m.x, top: m.y }}
+                style={{ left: m.x, top: m.y, width: m.size || 32, height: m.size || 32 }}
                 alt="marker"
                 onPointerDown={handleMarkerDown(i)}
               />
@@ -381,7 +405,20 @@ export default function DwgViewer({ file }) {
                       onChange={() => toggleLayer(l)}
                     />
                   }
-                  label={l}
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      {l}
+                      {isDetectorLayer(l) && (
+                        <IconButton
+                          size="small"
+                          onClick={() => mapDetectors(l)}
+                          sx={{ ml: 0.5 }}
+                        >
+                          <MapIcon fontSize="inherit" />
+                        </IconButton>
+                      )}
+                    </Box>
+                  }
                 />
               ))}
             </Box>
