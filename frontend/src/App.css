@@ -285,3 +285,44 @@
   font-size: 1.5rem;
 }
 
+
+.config-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: all;
+}
+
+.config-marker {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  pointer-events: auto;
+  cursor: move;
+  transition: transform 0.1s;
+}
+
+.config-marker:hover,
+.config-marker.dragging {
+  transform: scale(1.2);
+  cursor: grab;
+}
+
+.icon-container {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid #888;
+  justify-content: center;
+}
+
+.icon-palette {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.palette-icon {
+  width: 54px;
+  height: 54px;
+  user-select: none;
+}

@@ -13,6 +13,7 @@ import RefreshIcon from '@mui/icons-material/Refresh'
 import RotateLeftIcon from '@mui/icons-material/RotateLeft'
 import RotateRightIcon from '@mui/icons-material/RotateRight'
 import wasmUrl from '../node_modules/@mlightcad/libredwg-web/wasm/libredwg-web.wasm?url'
+import { loadConfig, saveConfig } from './configStorage.js'
 
 function filterDbByLayers(db, layerSet) {
   const filtered = structuredClone(db)
@@ -33,12 +34,50 @@ export default function DwgViewer({ file }) {
   const [rotation, setRotation] = useState(0)
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [overlay, setOverlay] = useState({ left: 0, top: 0, width: 0, height: 0 })
+  const [markers, setMarkers] = useState([])
+  const [drawingSize, setDrawingSize] = useState({ width: 0, height: 0 })
   const [layersOpen, setLayersOpen] = useState(true)
   const [loading, setLoading] = useState(false)
   const selectAllRef = useRef(null)
-  const svgContainerRef = useRef(null)
+  const containerRef = useRef(null)
+  const svgRef = useRef(null)
   const miniRef = useRef(null)
   const panState = useRef(null)
+  const handleDragOver = (e) => e.preventDefault()
+  const handleDrop = (e) => {
+    e.preventDefault()
+    const src = e.dataTransfer.getData('icon')
+    if (!src) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = (e.clientX - rect.left - pan.x) / zoom
+    const y = (e.clientY - rect.top - pan.y) / zoom
+    setMarkers((prev) => [...prev, { x, y, src }])
+  }
+  const handleMarkerDown = (index) => (e) => {
+    e.stopPropagation()
+    e.preventDefault()
+    const el = e.currentTarget
+    el.classList.add('dragging')
+    const startX = e.clientX
+    const startY = e.clientY
+    const startPos = markers[index]
+    const move = (ev) => {
+      const dx = (ev.clientX - startX) / zoom
+      const dy = (ev.clientY - startY) / zoom
+      setMarkers((prev) => {
+        const arr = [...prev]
+        arr[index] = { ...startPos, x: startPos.x + dx, y: startPos.y + dy }
+        return arr
+      })
+    }
+    const up = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      el.classList.remove('dragging')
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+  }
 
   useEffect(() => {
     if (!file) return
@@ -72,6 +111,23 @@ export default function DwgViewer({ file }) {
   }, [file])
 
   useEffect(() => {
+    const reader = new FileReader()
+    reader.onload = async () => {
+      const data = await loadConfig(reader.result)
+      setMarkers(data)
+    }
+    reader.readAsArrayBuffer(file)
+  }, [file])
+
+  useEffect(() => {
+    const reader = new FileReader()
+    reader.onload = async () => {
+      await saveConfig(reader.result, markers)
+    }
+    reader.readAsArrayBuffer(file)
+  }, [markers])
+
+  useEffect(() => {
     if (!dbInfo) return
     const { libredwg, db } = dbInfo
     const filtered = filterDbByLayers(db, visibleLayers)
@@ -103,13 +159,20 @@ export default function DwgViewer({ file }) {
   const resetRotation = () => setRotation(0)
 
   useEffect(() => {
-    if (!svgContainerRef.current) return
-    svgContainerRef.current.innerHTML = svg
+    if (!svgRef.current) return
+    svgRef.current.innerHTML = svg
+    const el = svgRef.current.querySelector('svg')
+    if (el) {
+      const vb = el.viewBox.baseVal
+      const width = vb && vb.width ? vb.width : el.getBBox().width
+      const height = vb && vb.height ? vb.height : el.getBBox().height
+      setDrawingSize({ width, height })
+    }
   }, [svg])
 
   useEffect(() => {
-    if (!svgContainerRef.current) return
-    const el = svgContainerRef.current.querySelector('svg')
+    if (!svgRef.current) return
+    const el = svgRef.current.querySelector('svg')
     if (el) {
       el.style.transform = `translate(${pan.x}px, ${pan.y}px) scale(${zoom}) rotate(${rotation}deg)`
       el.style.transformOrigin = 'center'
@@ -117,7 +180,7 @@ export default function DwgViewer({ file }) {
   }, [svg, zoom, rotation, pan])
 
   useEffect(() => {
-    const container = svgContainerRef.current
+    const container = containerRef.current
     const miniWrapper = miniRef.current
     if (!container || !miniWrapper) return
     const mini = miniWrapper.querySelector('.dwg-mini')
@@ -137,7 +200,7 @@ export default function DwgViewer({ file }) {
   }, [svg])
 
   useEffect(() => {
-    const container = svgContainerRef.current
+    const container = containerRef.current
     const miniWrapper = miniRef.current
     if (!container || !miniWrapper) return
     const mini = miniWrapper.querySelector('.dwg-mini')
@@ -162,7 +225,7 @@ export default function DwgViewer({ file }) {
   }, [svg, zoom, pan, rotation])
 
   useEffect(() => {
-    const container = svgContainerRef.current
+    const container = containerRef.current
     if (!container) return
     const svgEl = container.querySelector('svg')
     const getCanPan = () => {
@@ -221,7 +284,31 @@ export default function DwgViewer({ file }) {
 
   return svg ? (
       <Box className="dwg-viewer">
-        <Box className="dwg-container" ref={svgContainerRef} />
+        <Box className="dwg-container" ref={containerRef}>
+          <div ref={svgRef} />
+          <div
+            className="config-layer"
+            style={{
+              width: drawingSize.width,
+              height: drawingSize.height,
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom}) rotate(${rotation}deg)`,
+              transformOrigin: 'center'
+            }}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+          >
+            {markers.map((m, i) => (
+              <img
+                key={i}
+                src={m.src}
+                className="config-marker"
+                style={{ left: m.x, top: m.y }}
+                alt="marker"
+                onPointerDown={handleMarkerDown(i)}
+              />
+            ))}
+          </div>
+        </Box>
         <Box className="dwg-sidebar">
           <Box className="dwg-mini-section">
             <Box className="dwg-mini-wrapper" ref={miniRef}>

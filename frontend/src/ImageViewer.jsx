@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Box, IconButton, Typography } from '@mui/material'
+import { loadConfig, saveConfig } from './configStorage.js'
 import ZoomOutIcon from '@mui/icons-material/ZoomOut'
 import ZoomInIcon from '@mui/icons-material/ZoomIn'
 import RefreshIcon from '@mui/icons-material/Refresh'
@@ -9,16 +10,69 @@ export default function ImageViewer({ file }) {
   const [zoom, setZoom] = useState(1)
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
   const [overlay, setOverlay] = useState({ left: 0, top: 0, width: 0, height: 0 })
+  const [markers, setMarkers] = useState([])
   const containerRef = useRef(null)
   const imgRef = useRef(null)
   const miniRef = useRef(null)
   const dragState = useRef(null)
+  const handleDragOver = (e) => e.preventDefault()
+  const handleDrop = (e) => {
+    e.preventDefault()
+    const src = e.dataTransfer.getData('icon')
+    if (!src) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = (e.clientX - rect.left) / zoom
+    const y = (e.clientY - rect.top) / zoom
+    setMarkers((prev) => [...prev, { x, y, src }])
+  }
+  const handleMarkerDown = (index) => (e) => {
+    e.stopPropagation()
+    e.preventDefault()
+    const el = e.currentTarget
+    el.classList.add('dragging')
+    const startX = e.clientX
+    const startY = e.clientY
+    const startPos = markers[index]
+    const move = (ev) => {
+      const dx = (ev.clientX - startX) / zoom
+      const dy = (ev.clientY - startY) / zoom
+      setMarkers((prev) => {
+        const arr = [...prev]
+        arr[index] = { ...startPos, x: startPos.x + dx, y: startPos.y + dy }
+        return arr
+      })
+    }
+    const up = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      el.classList.remove('dragging')
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+  }
 
   useEffect(() => {
     const objectUrl = URL.createObjectURL(file)
     setUrl(objectUrl)
     return () => URL.revokeObjectURL(objectUrl)
   }, [file])
+
+  useEffect(() => {
+    const reader = new FileReader()
+    reader.onload = async () => {
+      const markersData = await loadConfig(reader.result)
+      setMarkers(markersData)
+    }
+    reader.readAsArrayBuffer(file)
+  }, [file])
+
+  useEffect(() => {
+    const reader = new FileReader()
+    reader.onload = async () => {
+      await saveConfig(reader.result, markers)
+    }
+    reader.readAsArrayBuffer(file)
+  }, [markers])
 
   const zoomIn = () => setZoom((z) => z * 1.1)
   const zoomOut = () => setZoom((z) => z / 1.1)
@@ -120,6 +174,23 @@ export default function ImageViewer({ file }) {
     <Box className="img-viewer">
       <Box className="img-container" ref={containerRef}>
         {url && <img ref={imgRef} src={url} alt="Selected file" draggable="false" />}
+        <div
+          className="config-layer"
+          style={{ width: dimensions.width * zoom, height: dimensions.height * zoom }}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+        >
+          {markers.map((m, i) => (
+            <img
+              key={i}
+              src={m.src}
+              className="config-marker"
+              style={{ left: m.x * zoom, top: m.y * zoom }}
+              alt="marker"
+              onPointerDown={handleMarkerDown(i)}
+            />
+          ))}
+        </div>
       </Box>
       <Box className="img-sidebar">
         <Box className="img-mini-section">

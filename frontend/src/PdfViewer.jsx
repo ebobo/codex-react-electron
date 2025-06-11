@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist'
 import { Box, Button, IconButton, Typography } from '@mui/material'
+import { loadConfig, saveConfig } from './configStorage.js'
 import ZoomOutIcon from '@mui/icons-material/ZoomOut'
 import ZoomInIcon from '@mui/icons-material/ZoomIn'
 import RefreshIcon from '@mui/icons-material/Refresh'
@@ -16,7 +17,43 @@ export default function PdfViewer({ file }) {
   const [page, setPage] = useState(null)
   const [zoom, setZoom] = useState(1)
   const [overlay, setOverlay] = useState({ left: 0, top: 0, width: 0, height: 0 })
+  const [markers, setMarkers] = useState([])
   const dragState = useRef(null)
+  const handleDragOver = (e) => e.preventDefault()
+  const handleDrop = (e) => {
+    e.preventDefault()
+    const src = e.dataTransfer.getData('icon')
+    if (!src) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = (e.clientX - rect.left) / zoom
+    const y = (e.clientY - rect.top) / zoom
+    setMarkers((prev) => [...prev, { x, y, src }])
+  }
+  const handleMarkerDown = (index) => (e) => {
+    e.stopPropagation()
+    e.preventDefault()
+    const el = e.currentTarget
+    el.classList.add('dragging')
+    const startX = e.clientX
+    const startY = e.clientY
+    const startPos = markers[index]
+    const move = (ev) => {
+      const dx = (ev.clientX - startX) / zoom
+      const dy = (ev.clientY - startY) / zoom
+      setMarkers((prev) => {
+        const arr = [...prev]
+        arr[index] = { ...startPos, x: startPos.x + dx, y: startPos.y + dy }
+        return arr
+      })
+    }
+    const up = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      el.classList.remove('dragging')
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+  }
 
   const zoomIn = () => setZoom((z) => z * 1.1)
   const zoomOut = () => setZoom((z) => z / 1.1)
@@ -33,6 +70,23 @@ export default function PdfViewer({ file }) {
     }
     reader.readAsArrayBuffer(file)
   }, [file])
+
+  useEffect(() => {
+    const reader = new FileReader()
+    reader.onload = async () => {
+      const markersData = await loadConfig(reader.result)
+      setMarkers(markersData)
+    }
+    reader.readAsArrayBuffer(file)
+  }, [file])
+
+  useEffect(() => {
+    const reader = new FileReader()
+    reader.onload = async () => {
+      await saveConfig(reader.result, markers)
+    }
+    reader.readAsArrayBuffer(file)
+  }, [markers])
 
   useEffect(() => {
     if (!page) return
@@ -138,6 +192,23 @@ export default function PdfViewer({ file }) {
     <Box className="pdf-viewer">
       <Box className="pdf-container" ref={containerRef}>
         <canvas ref={canvasRef} />
+        <div
+          className="config-layer"
+          style={{ width: canvasRef.current ? canvasRef.current.width : 0, height: canvasRef.current ? canvasRef.current.height : 0 }}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+        >
+          {markers.map((m, i) => (
+            <img
+              key={i}
+              src={m.src}
+              className="config-marker"
+              style={{ left: m.x * zoom, top: m.y * zoom }}
+              alt="marker"
+              onPointerDown={handleMarkerDown(i)}
+            />
+          ))}
+        </div>
       </Box>
       <Box className="pdf-sidebar">
         <Box className="pdf-mini-section">

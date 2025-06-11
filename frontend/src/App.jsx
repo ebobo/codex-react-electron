@@ -1,8 +1,16 @@
 import { useState } from 'react'
-import { AppBar, Toolbar, Typography, Container, Button, Box } from '@mui/material'
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Container,
+  Button,
+  Box,
+} from '@mui/material'
 import PdfViewer from './PdfViewer.jsx'
 import DwgViewer from './DwgViewer.jsx'
 import ImageViewer from './ImageViewer.jsx'
+import IconPalette from './IconPalette.jsx'
 import './App.css'
 
 function App() {
@@ -35,6 +43,11 @@ function App() {
           </Button>
         </Toolbar>
       </AppBar>
+      {file && (
+        <Box className="icon-container">
+          <IconPalette />
+        </Box>
+      )}
       <Container sx={{ mt: 2 }}>
         {file && fileType === 'pdf' && <PdfViewer file={file} />}
         {file && fileType === 'dwg' && <DwgViewer file={file} />}
