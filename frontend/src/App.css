@@ -328,8 +328,8 @@
 }
 
 .start-icon {
-  max-width: 40vw;
+  max-width: 120px;
   height: auto;
   display: block;
-  margin: 4rem auto 0;
+  margin: 0 auto 1rem;
 }

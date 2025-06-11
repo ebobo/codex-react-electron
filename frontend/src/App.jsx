@@ -28,6 +28,11 @@ function App() {
 
   return (
     <Box className="App">
+      {!file && (
+        <Box sx={{ textAlign: 'center', mt: 2 }}>
+          <img src={appIcon} alt="App icon" className="start-icon" />
+        </Box>
+      )}
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" sx={{ mr: 2 }}>
@@ -50,9 +55,6 @@ function App() {
         </Box>
       )}
       <Container sx={{ mt: 2, textAlign: 'center' }}>
-        {!file && (
-          <img src={appIcon} alt="App icon" className="start-icon" />
-        )}
         {file && fileType === 'pdf' && <PdfViewer file={file} />}
         {file && fileType === 'dwg' && <DwgViewer file={file} />}
         {file && (fileType === 'jpg' || fileType === 'jpeg') && (
